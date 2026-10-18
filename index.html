@@ -3,138 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fazenda Blocky Mobile</title>
+    <title>Fazenda Blocky: Caçadores de Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: sans-serif; background: #111; color: #fff; touch-action: none; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; z-index: 10; }
+        body { margin: 0; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111; color: #fff; touch-action: none; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; box-sizing: border-box; z-index: 10; }
         .interactive { pointer-events: auto; }
-        .game-panel { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 16px; }
+        .game-panel { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-    <!-- UI LAYER (MÓVEL) -->
+    <!-- UI LAYER -->
     <div id="ui-layer">
         <!-- TOP HUD -->
         <div class="flex justify-between items-center w-full">
-            <div class="flex gap-2">
-                <div class="game-panel px-3 py-1 flex items-center gap-1.5">
-                    <span class="text-xl">🪙</span>
-                    <span id="hud-coins" class="text-sm font-black text-amber-400">150</span>
+            <div class="flex gap-3">
+                <div class="game-panel px-4 py-2 flex items-center gap-2">
+                    <span class="text-2xl">🪙</span>
+                    <div>
+                        <div class="text-xs text-slate-400 font-bold">MOEDAS</div>
+                        <div id="hud-coins" class="text-lg font-black text-amber-400">150</div>
+                    </div>
                 </div>
-                <div class="game-panel px-3 py-1 flex items-center gap-1.5">
-                    <span class="text-xl">📦</span>
-                    <span id="hud-packs" class="text-sm font-black text-blue-400">3</span>
+                <div class="game-panel px-4 py-2 flex items-center gap-2">
+                    <span class="text-2xl">📦</span>
+                    <div>
+                        <div class="text-xs text-slate-400 font-bold">PACOTES</div>
+                        <div id="hud-packs" class="text-lg font-black text-blue-400">3</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="flex gap-1.5 interactive">
-                <button onclick="openMenu('custom')" class="bg-emerald-600 font-bold px-3 py-1.5 rounded-xl text-xs border border-emerald-400">👤 Avatar</button>
-                <button onclick="openMenu('album')" class="bg-purple-600 font-bold px-3 py-1.5 rounded-xl text-xs border border-purple-400">📖 Cards</button>
-                <button onclick="openMenu('missions')" class="bg-amber-600 font-bold px-3 py-1.5 rounded-xl text-xs border border-amber-400">⭐ Missões</button>
-            </div>
-        </div>
-
-        <!-- NOTIFICAÇÕES -->
-        <div id="notification-box" class="self-center bg-black/80 border border-amber-500/50 text-amber-300 px-4 py-1.5 rounded-full text-xs font-semibold opacity-0 transition-opacity pointer-events-none">
-            Aviso
-        </div>
-
-        <!-- CONTROLES TÁTEIS (JOYSTICK + PULO) -->
-        <div class="flex justify-between items-end w-full pb-2">
-            <!-- Joystick Virtual -->
-            <div id="joystick-zone" class="relative w-28 h-28 bg-white/10 rounded-full border border-white/20 interactive flex items-center justify-center">
-                <div id="joystick-knob" class="absolute w-10 h-10 bg-white/60 rounded-full pointer-events-none"></div>
-            </div>
-            <!-- Botões de Ação -->
             <div class="flex gap-2 interactive">
-                <button id="btn-action" onclick="triggerAction()" class="w-16 h-16 bg-emerald-500 border-2 border-emerald-300 rounded-full flex items-center justify-center text-xl shadow-xl active:scale-90">🖐️</button>
-                <button id="btn-jump" onclick="triggerJump()" class="w-16 h-16 bg-blue-500 border-2 border-blue-300 rounded-full flex items-center justify-center text-xl shadow-xl active:scale-90">⬆️</button>
+                <button onclick="openMenu('custom')" class="bg-emerald-600 hover:bg-emerald-500 font-bold px-4 py-2 rounded-xl shadow-lg border border-emerald-400 flex items-center gap-2 transition active:scale-95 text-xs sm:text-base">👤 Personagem</button>
+                <button onclick="openMenu('album')" class="bg-purple-600 hover:bg-purple-500 font-bold px-4 py-2 rounded-xl shadow-lg border border-purple-400 flex items-center gap-2 transition active:scale-95 text-xs sm:text-base">📖 Cards</button>
+                <button onclick="openMenu('missions')" class="bg-amber-600 hover:bg-amber-500 font-bold px-4 py-2 rounded-xl shadow-lg border border-amber-400 flex items-center gap-2 transition active:scale-95 text-xs sm:text-base">⭐ Missões</button>
+            </div>
+        </div>
+
+        <!-- CENTER NOTIFICATIONS -->
+        <div id="notification-box" class="self-center bg-black/70 border border-amber-500/50 text-amber-300 px-6 py-2 rounded-full text-sm font-semibold opacity-0 transition-opacity duration-300 pointer-events-none">
+            Aviso do Jogo
+        </div>
+
+        <!-- MOBILE CONTROLS & JOYSTICK -->
+        <div class="flex justify-between items-end w-full pb-4">
+            <div id="joystick-zone" class="relative w-32 h-32 bg-white/10 rounded-full border border-white/20 interactive flex items-center justify-center">
+                <div id="joystick-knob" class="absolute w-12 h-12 bg-white/50 rounded-full shadow-md pointer-events-none"></div>
+            </div>
+            <div class="flex gap-3 interactive">
+                <button id="btn-action" onclick="triggerAction()" class="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500 hover:bg-emerald-400 border-4 border-emerald-300 rounded-full flex items-center justify-center text-2xl shadow-xl active:scale-95 transition">🖐️</button>
+                <button id="btn-jump" onclick="triggerJump()" class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500 hover:bg-blue-400 border-4 border-blue-300 rounded-full flex items-center justify-center text-2xl shadow-xl active:scale-95 transition">⬆️</button>
             </div>
         </div>
     </div>
 
-    <!-- MENUS (AVATAR, CARDS, MISSÕES, GACHA) -->
-    <div id="menu-custom" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-        <div class="game-panel w-full max-w-xs p-4 flex flex-col gap-3">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h2 class="text-base font-bold text-emerald-400">Customizar Avatar</h2>
-                <button onclick="closeMenus()" class="text-slate-400 text-lg">✕</button>
+    <!-- MENUS & MODALS -->
+    <!-- Customization Menu -->
+    <div id="menu-custom" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="game-panel w-full max-w-md p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h2 class="text-xl font-bold text-emerald-400">Customizar Personagem</h2>
+                <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-xl">✕</button>
             </div>
-            <div class="flex flex-col gap-2 text-xs">
-                <label>Cor da Pele: <input type="color" id="opt-skin" value="#fcd34d" onchange="updateAvatar()" class="w-full h-8 rounded"></label>
-                <label>Cor da Camisa: <input type="color" id="opt-shirt" value="#3b82f6" onchange="updateAvatar()" class="w-full h-8 rounded"></label>
-                <label>Cor da Calça: <input type="color" id="opt-pants" value="#1e293b" onchange="updateAvatar()" class="w-full h-8 rounded"></label>
-                <label>Acessório: 
-                    <select id="opt-hat" onchange="updateAvatar()" class="w-full mt-1 p-1 bg-slate-800 rounded text-xs">
+            <div class="flex flex-col gap-3 text-sm">
+                <label>Cor da Pele: <input type="color" id="opt-skin" value="#fcd34d" onchange="updateAvatar()" class="w-full h-10 rounded cursor-pointer"></label>
+                <label>Cor da Camisa: <input type="color" id="opt-shirt" value="#3b82f6" onchange="updateAvatar()" class="w-full h-10 rounded cursor-pointer"></label>
+                <label>Cor da Calça: <input type="color" id="opt-pants" value="#1e293b" onchange="updateAvatar()" class="w-full h-10 rounded cursor-pointer"></label>
+                <label>Acessório de Cabeça: 
+                    <select id="opt-hat" onchange="updateAvatar()" class="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-lg">
                         <option value="none">Nenhum</option>
                         <option value="cap">Boné</option>
                         <option value="straw">Chapéu de Palha</option>
                     </select>
                 </label>
             </div>
-            <button onclick="closeMenus()" class="bg-emerald-600 font-bold py-2 rounded-xl text-xs">Jogar</button>
+            <button onclick="closeMenus()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 font-bold py-3 rounded-xl">Salvar e Jogar</button>
         </div>
     </div>
 
-    <div id="menu-album" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-        <div class="game-panel w-full max-w-sm p-4 flex flex-col gap-3 max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h2 class="text-base font-bold text-purple-400">Álbum de Cards</h2>
-                <button onclick="closeMenus()" class="text-slate-400 text-lg">✕</button>
+    <!-- Album Menu -->
+    <div id="menu-album" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="game-panel w-full max-w-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h2 class="text-xl font-bold text-purple-400">Álbum & Coleção de Cards</h2>
+                <div class="flex gap-3">
+                    <button onclick="openGacha()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 py-1.5 rounded-lg text-xs animate-bounce">📦 Abrir Pacotes (<span id="pack-count-lbl">3</span>)</button>
+                    <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-xl">✕</button>
+                </div>
             </div>
-            <button onclick="openGacha()" class="bg-amber-500 text-slate-950 font-black p-2 rounded-lg text-xs">📦 Abrir Pacotes (<span id="pack-count-lbl">3</span>)</button>
-            <div id="album-grid" class="flex flex-col gap-2 overflow-y-auto max-h-[50vh]"></div>
+            <div id="album-stats" class="text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex justify-around">
+                <div>Cards Únicos: <span id="stat-unique" class="font-bold text-amber-400">0/7</span></div>
+                <div>Total Obtidos: <span id="stat-total" class="font-bold text-blue-400">0</span></div>
+                <div>No Sítio: <span id="stat-pets" class="font-bold text-emerald-400">0</span></div>
+            </div>
+            <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto max-h-[50vh] pr-2"></div>
         </div>
     </div>
 
-    <div id="menu-gacha" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center p-4">
-        <h2 class="text-lg font-black text-amber-400 mb-2">NOVOS CARDS!</h2>
-        <div id="gacha-card-container" class="flex flex-wrap justify-center gap-2 mb-4"></div>
-        <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 font-bold px-4 py-2 rounded-xl text-xs">Continuar</button>
+    <!-- Gacha / Pack Opening Modal -->
+    <div id="menu-gacha" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex flex-col items-center justify-center p-4">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-black text-amber-400 mb-1">ABRINDO PACOTE DE CARDS</h2>
+            <p class="text-xs text-slate-400">Novos animais descobertos!</p>
+        </div>
+        <div id="gacha-card-container" class="flex flex-wrap justify-center gap-4 mb-8"></div>
+        <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-6 py-3 rounded-xl">Continuar Jogando</button>
     </div>
 
-    <div id="menu-missions" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
-        <div class="game-panel w-full max-w-xs p-4 flex flex-col gap-3">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                <h2 class="text-base font-bold text-amber-400">Missões</h2>
-                <button onclick="closeMenus()" class="text-slate-400 text-lg">✕</button>
+    <!-- Missions Menu -->
+    <div id="menu-missions" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="game-panel w-full max-w-md p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h2 class="text-xl font-bold text-amber-400">Missões do Sítio</h2>
+                <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-xl">✕</button>
             </div>
-            <div class="flex flex-col gap-2">
-                <button onclick="startMission(1)" class="bg-slate-800 p-2 rounded-lg text-left text-xs border border-slate-700 flex justify-between items-center">
-                    <div><b>1. Apple Run</b><br><span class="text-[10px] text-slate-400">Coletar maçãs</span></div>
-                    <span class="bg-emerald-600 px-2 py-1 rounded text-[10px]">Iniciar</span>
-                </button>
-                <button onclick="startMission(2)" class="bg-slate-800 p-2 rounded-lg text-left text-xs border border-slate-700 flex justify-between items-center">
-                    <div><b>2. Celeiro Parkour</b><br><span class="text-[10px] text-slate-400">Subir fardos</span></div>
-                    <span class="bg-blue-600 px-2 py-1 rounded text-[10px]">Iniciar</span>
-                </button>
+            <div class="flex flex-col gap-3">
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-sm text-emerald-400">1. Pomar Apple Run</div>
+                        <div class="text-xs text-slate-400">Colete maçãs no menor tempo possível.</div>
+                    </div>
+                    <button onclick="startMission(1)" class="bg-emerald-600 hover:bg-emerald-500 font-bold px-3 py-2 rounded-lg text-xs">Jogar</button>
+                </div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-sm text-blue-400">2. Celeiro Obby Parkour</div>
+                        <div class="text-xs text-slate-400">Suba pelas caixas e fardos de feno.</div>
+                    </div>
+                    <button onclick="startMission(2)" class="bg-blue-600 hover:bg-blue-500 font-bold px-3 py-2 rounded-lg text-xs">Jogar</button>
+                </div>
             </div>
         </div>
+    </div>
+
+    <!-- Mission Active Overlay -->
+    <div id="mission-hud" class="fixed top-20 left-1/2 -translate-x-1/2 bg-black/70 border border-amber-400 px-6 py-2 rounded-2xl hidden text-center z-40">
+        <div id="mission-title" class="text-xs font-bold text-amber-400">MISSÃO ATIVA</div>
+        <div id="mission-timer" class="text-xl font-black">00:00</div>
     </div>
 
     <script>
         const DATABASE_CARDS = [
-            { id: 'chicken', name: 'Galinha Caipira', rarity: 'Comum', color: '#94a3b8' },
-            { id: 'pig', name: 'Porquinho Rosa', rarity: 'Comum', color: '#94a3b8' },
-            { id: 'sheep', name: 'Ovelha Fofinha', rarity: 'Raro', color: '#3b82f6' },
-            { id: 'cow', name: 'Vaca Malhada', rarity: 'Raro', color: '#3b82f6' },
-            { id: 'horse', name: 'Cavalo Campeão', rarity: 'Ultra Raro', color: '#a855f7' },
-            { id: 'bull', name: 'Touro Bravo', rarity: 'Épico', color: '#eab308' },
-            { id: 'dragon', name: 'Dragão Dourado', rarity: 'Lendário', color: '#ef4444' }
+            { id: 'chicken', name: 'Galinha Caipira', rarity: 'Comum', color: '#94a3b8', bonus: 'Produz ovos/moedas' },
+            { id: 'pig', name: 'Porquinho Rosa', rarity: 'Comum', color: '#94a3b8', bonus: 'Procura trufas' },
+            { id: 'sheep', name: 'Ovelha Fofinha', rarity: 'Raro', color: '#3b82f6', bonus: 'Fornece lã extra' },
+            { id: 'cow', name: 'Vaca Malhada', rarity: 'Raro', color: '#3b82f6', bonus: 'Leite nutritivo' },
+            { id: 'horse', name: 'Cavalo Campeão', rarity: 'Ultra Raro', color: '#a855f7', bonus: 'Velocidade de montaria' },
+            { id: 'bull', name: 'Touro Bravo', rarity: 'Épico', color: '#eab308', bonus: 'Força no sítio' },
+            { id: 'dragon', name: 'Dragão Dourado Rural', rarity: 'Lendário', color: '#ef4444', bonus: 'Multiplicador lendário' }
         ];
 
         let playerState = {
-            coins: 150, packs: 3,
-            cards: { chicken: 1, pig: 1 },
+            coins: 150,
+            packs: 3,
+            cards: { chicken: 2, pig: 1 },
             audioRecordings: {},
             avatar: { skin: '#fcd34d', shirt: '#3b82f6', pants: '#1e293b', hat: 'straw' }
         };
 
         let scene, camera, renderer, player, avatarGroup;
-        let cameraAngle = 0, cameraDistance = 10, cameraHeight = 5;
+        let cameraAngle = 0, cameraDistance = 12, cameraHeight = 6;
+        let isMouseDown = false, mousePrevX = 0, mousePrevY = 0;
         let petsInFarm = [];
         let joyActive = false, joyStartX = 0, joyStartY = 0, joyDeltaX = 0, joyDeltaY = 0;
         let velocityY = 0, isJumping = false;
@@ -142,19 +174,28 @@
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
+            scene.fog = new THREE.FogExp2(0x87ceeb, 0.012);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            // Iluminação detalhada original
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xfffaed, 0.9);
+            dirLight.position.set(50, 100, 50);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
 
             createFarmMap();
             createPlayer();
-            setupMobileControls();
+            setupControls();
+            updateAlbumUI();
             updateFarmPets();
 
             window.addEventListener('resize', onWindowResize);
@@ -162,39 +203,124 @@
         }
 
         function createFarmMap() {
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshBasicMaterial({ color: 0x55a630 }));
+            // Chão do Sítio com textura / material completo
+            const groundGeo = new THREE.PlaneGeometry(300, 300);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x55a630, roughness: 0.8 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
             scene.add(ground);
 
-            // Cercado
-            const pen = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({ color: 0x606c38 }));
-            pen.rotation.x = -Math.PI / 2;
-            pen.position.set(-10, 0.02, -10);
-            scene.add(pen);
+            // Casa Principal com telhado 3D original
+            const houseGroup = new THREE.Group();
+            const baseMat = new THREE.MeshStandardMaterial({ color: 0xfdf0d5 });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xd90429 });
+            
+            const base = new THREE.Mesh(new THREE.BoxGeometry(10, 6, 10), baseMat);
+            base.position.y = 3;
+            base.castShadow = true; base.receiveShadow = true;
+            houseGroup.add(base);
+
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(8, 4, 4), roofMat);
+            roof.position.y = 8;
+            roof.rotation.y = Math.PI / 4;
+            roof.castShadow = true;
+            houseGroup.add(roof);
+            houseGroup.position.set(-20, 0, -20);
+            scene.add(houseGroup);
+
+            // Celeiro
+            const barnGroup = new THREE.Group();
+            const barnMat = new THREE.MeshStandardMaterial({ color: 0x9b2226 });
+            const barnBase = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 20), barnMat);
+            barnBase.position.y = 4;
+            barnBase.castShadow = true;
+            barnGroup.add(barnBase);
+            barnGroup.position.set(25, 0, -25);
+            scene.add(barnGroup);
+
+            // Cercado / Santuário dos Animais com cerca rústica
+            const fenceMat = new THREE.MeshStandardMaterial({ color: 0xbb9457 });
+            for(let i = -15; i <= 15; i += 5) {
+                createFencePost(-30, i, fenceMat);
+                createFencePost(0, i, fenceMat);
+            }
+            const penGround = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), new THREE.MeshStandardMaterial({ color: 0x606c38 }));
+            penGround.rotation.x = -Math.PI / 2;
+            penGround.position.set(-15, 0.05, 0);
+            scene.add(penGround);
+        }
+
+        function createFencePost(x, z, mat) {
+            const post = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3, 0.8), mat);
+            post.position.set(x, 1.5, z);
+            post.castShadow = true;
+            scene.add(post);
         }
 
         function createPlayer() {
             player = new THREE.Group();
+            player.position.set(0, 0, 0);
             scene.add(player);
+
             avatarGroup = new THREE.Group();
             player.add(avatarGroup);
             buildAvatarMesh();
         }
 
         function buildAvatarMesh() {
-            while(avatarGroup.children.length > 0) avatarGroup.remove(avatarGroup.children[0]);
-            const skinMat = new THREE.MeshBasicMaterial({ color: playerState.avatar.skin });
-            const shirtMat = new THREE.MeshBasicMaterial({ color: playerState.avatar.shirt });
-            const pantsMat = new THREE.MeshBasicMaterial({ color: playerState.avatar.pants });
+            while(avatarGroup.children.length > 0){ 
+                avatarGroup.remove(avatarGroup.children[0]); 
+            }
 
-            const head = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), skinMat);
-            head.position.y = 3.5; avatarGroup.add(head);
+            const skinMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.skin });
+            const shirtMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.shirt });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.pants });
 
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 0.6), shirtMat);
-            torso.position.y = 2.2; avatarGroup.add(torso);
+            // Cabeça detalhada
+            const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), skinMat);
+            head.position.y = 4.2;
+            head.castShadow = true;
+            avatarGroup.add(head);
 
-            const legs = new THREE.Mesh(new THREE.BoxGeometry(1, 1.4, 0.5), pantsMat);
-            legs.position.y = 0.7; avatarGroup.add(legs);
+            // Chapéus originais
+            if(playerState.avatar.hat === 'straw') {
+                const hatMat = new THREE.MeshStandardMaterial({ color: 0xd4a373 });
+                const brim = new THREE.Mesh(new THREE.BoxGeometry(2, 0.2, 2), hatMat);
+                brim.position.set(0, 4.8, 0);
+                avatarGroup.add(brim);
+            } else if(playerState.avatar.hat === 'cap') {
+                const capMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
+                const cap = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.5, 1.4), capMat);
+                cap.position.set(0, 4.8, -0.1);
+                avatarGroup.add(cap);
+            }
+
+            // Tronco e membros com sombras ativas
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2, 0.8), shirtMat);
+            torso.position.y = 2.5;
+            torso.castShadow = true;
+            avatarGroup.add(torso);
+
+            const armGeo = new THREE.BoxGeometry(0.5, 1.8, 0.6);
+            const leftArm = new THREE.Mesh(armGeo, shirtMat);
+            leftArm.position.set(1.1, 2.5, 0);
+            avatarGroup.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeo, shirtMat);
+            rightArm.position.set(-1.1, 2.5, 0);
+            avatarGroup.add(rightArm);
+
+            const legGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
+            const leftLeg = new THREE.Mesh(legGeo, pantsMat);
+            leftLeg.position.set(0.5, 0.9, 0);
+            leftLeg.castShadow = true;
+            avatarGroup.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeo, pantsMat);
+            rightLeg.position.set(-0.5, 0.9, 0);
+            rightLeg.castShadow = true;
+            avatarGroup.add(rightLeg);
         }
 
         function updateAvatar() {
@@ -205,7 +331,39 @@
             buildAvatarMesh();
         }
 
-        function setupMobileControls() {
+        function setupControls() {
+            // Controlo de Câmera 360 por Toque (Lado direito do ecrã) ou Rotação de rato no PC
+            let touchCamStartX = 0;
+            window.addEventListener('touchstart', (e) => {
+                if(e.touches[0].clientX > window.innerWidth / 2) {
+                    touchCamStartX = e.touches[0].clientX;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if(e.touches[0].clientX > window.innerWidth / 2) {
+                    let deltaX = e.touches[0].clientX - touchCamStartX;
+                    cameraAngle -= deltaX * 0.008;
+                    touchCamStartX = e.touches[0].clientX;
+                }
+            }, { passive: true });
+
+            // Suporte a rato para computadores também
+            window.addEventListener('mousedown', (e) => {
+                if(e.target.tagName === 'CANVAS') {
+                    isMouseDown = true;
+                    mousePrevX = e.clientX;
+                }
+            });
+            window.addEventListener('mousemove', (e) => {
+                if(!isMouseDown) return;
+                let deltaX = e.clientX - mousePrevX;
+                cameraAngle -= deltaX * 0.008;
+                mousePrevX = e.clientX;
+            });
+            window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+            // Joystick Virtual Tátil para telemóvel
             const joyZone = document.getElementById('joystick-zone');
             const joyKnob = document.getElementById('joystick-knob');
 
@@ -221,9 +379,9 @@
                 joyDeltaX = touch.clientX - joyStartX;
                 joyDeltaY = touch.clientY - joyStartY;
                 let dist = Math.hypot(joyDeltaX, joyDeltaY);
-                if(dist > 35) {
-                    joyDeltaX = (joyDeltaX / dist) * 35;
-                    joyDeltaY = (joyDeltaY / dist) * 35;
+                if(dist > 45) {
+                    joyDeltaX = (joyDeltaX / dist) * 45;
+                    joyDeltaY = (joyDeltaY / dist) * 45;
                 }
                 joyKnob.style.transform = `translate(${joyDeltaX}px, ${joyDeltaY}px)`;
             }, { passive: true });
@@ -233,36 +391,56 @@
                 joyDeltaX = 0; joyDeltaY = 0;
                 joyKnob.style.transform = `translate(0px, 0px)`;
             });
-
-            // Gira câmara ao deslizar na parte direita do ecrã
-            let touchCamStartX = 0;
-            window.addEventListener('touchstart', (e) => {
-                if(e.touches[0].clientX > window.innerWidth / 2) {
-                    touchCamStartX = e.touches[0].clientX;
-                }
-            }, { passive: true });
-
-            window.addEventListener('touchmove', (e) => {
-                if(e.touches[0].clientX > window.innerWidth / 2) {
-                    let deltaX = e.touches[0].clientX - touchCamStartX;
-                    cameraAngle -= deltaX * 0.005;
-                    touchCamStartX = e.touches[0].clientX;
-                }
-            }, { passive: true });
         }
 
         function triggerJump() {
-            if(!isJumping) { velocityY = 0.3; isJumping = true; }
+            if(!isJumping) { velocityY = 0.35; isJumping = true; }
         }
 
         function triggerAction() { showNotification("Ação executada!"); }
+
+        function updateFarmPets() {
+            petsInFarm.forEach(pet => scene.remove(pet.mesh));
+            petsInFarm = [];
+
+            let index = 0;
+            for(let id in playerState.cards) {
+                if(playerState.cards[id] > 0) {
+                    let cardData = DATABASE_CARDS.find(c => c.id === id);
+                    if(cardData) {
+                        let petMesh = createPetMesh(cardData);
+                        let px = -25 + (index % 4) * 4;
+                        let pz = -10 + Math.floor(index / 4) * 4;
+                        petMesh.position.set(px, 0, pz);
+                        scene.add(petMesh);
+
+                        petsInFarm.push({ mesh: petMesh, id: id, timer: Math.random() * 10 + 5 });
+                        index++;
+                    }
+                }
+            }
+            document.getElementById('stat-pets').innerText = petsInFarm.length;
+        }
+
+        function createPetMesh(data) {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: data.color });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 1.8), mat);
+            body.position.y = 0.6; body.castShadow = true;
+            group.add(body);
+
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), mat);
+            head.position.set(0, 1.3, 0.8); head.castShadow = true;
+            group.add(head);
+            return group;
+        }
 
         function animLoop() {
             requestAnimationFrame(animLoop);
 
             if(joyActive) {
-                let moveX = joyDeltaX / 35;
-                let moveZ = joyDeltaY / 35;
+                let moveX = joyDeltaX / 45;
+                let moveZ = joyDeltaY / 45;
 
                 let camForwardX = Math.sin(cameraAngle);
                 let camForwardZ = Math.cos(cameraAngle);
@@ -272,8 +450,8 @@
                 let dirX = camForwardX * (-moveZ) + camRightX * moveX;
                 let dirZ = camForwardZ * (-moveZ) + camRightZ * moveX;
 
-                player.position.x += dirX * 0.15;
-                player.position.z += dirZ * 0.15;
+                player.position.x += dirX * 0.18;
+                player.position.z += dirZ * 0.18;
                 player.rotation.y = Math.atan2(dirX, dirZ);
             }
 
@@ -281,12 +459,22 @@
             if(player.position.y > 0) velocityY -= 0.02;
             else { player.position.y = 0; isJumping = false; velocityY = 0; }
 
-            camera.position.set(
-                player.position.x + Math.sin(cameraAngle) * cameraDistance,
-                player.position.y + cameraHeight,
-                player.position.z + Math.cos(cameraAngle) * cameraDistance
-            );
-            camera.lookAt(player.position.x, player.position.y + 1.5, player.position.z);
+            // Câmera 360 suave acompanhando o player
+            let camX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
+            let camZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
+            camera.position.set(camX, player.position.y + cameraHeight, camZ);
+            camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
+
+            // Animação de som dos pets
+            petsInFarm.forEach(pet => {
+                pet.timer -= 0.016;
+                if(pet.timer <= 0) {
+                    pet.timer = Math.random() * 10 + 8;
+                    playPetSound(pet.id);
+                    pet.mesh.position.y = 0.5;
+                    setTimeout(() => pet.mesh.position.y = 0, 300);
+                }
+            });
 
             renderer.render(scene, camera);
         }
@@ -299,28 +487,20 @@
                 mr.onstop = () => {
                     let blob = new Blob(chunks, { type: 'audio/webm' });
                     playerState.audioRecordings[id] = URL.createObjectURL(blob);
-                    showNotification("Som do bichinho gravado!");
+                    showNotification("Som gravado com sucesso!");
                     updateAlbumUI();
                 };
                 mr.start();
-                showNotification("Gravando som...");
-                setTimeout(() => { if(mr.state === 'recording') mr.stop(); }, 2000);
-            }).catch(() => showNotification("Microfone desativado."));
+                showNotification("Gravando som do bichinho...");
+                setTimeout(() => { if(mr.state === 'recording') mr.stop(); }, 2500);
+            }).catch(() => showNotification("Erro ao aceder ao microfone."));
         }
 
-        function updateFarmPets() {
-            petsInFarm.forEach(p => scene.remove(p));
-            petsInFarm = [];
-            let idx = 0;
-            for(let id in playerState.cards) {
-                if(playerState.cards[id] > 0) {
-                    let c = DATABASE_CARDS.find(x => x.id === id);
-                    let m = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), new THREE.MeshBasicMaterial({ color: c.color }));
-                    m.position.set(-14 + (idx%3)*3, 0.4, -14 + Math.floor(idx/3)*3);
-                    scene.add(m);
-                    petsInFarm.push(m);
-                    idx++;
-                }
+        function playPetSound(id) {
+            if(playerState.audioRecordings[id]) {
+                const sound = new Audio(playerState.audioRecordings[id]);
+                sound.volume = 0.5;
+                sound.play().catch(e => {});
             }
         }
 
@@ -340,23 +520,35 @@
         function updateAlbumUI() {
             const grid = document.getElementById('album-grid');
             grid.innerHTML = '';
+            let uniqueCount = 0, totalCount = 0;
+
             DATABASE_CARDS.forEach(card => {
                 let count = playerState.cards[card.id] || 0;
-                let hasAudio = playerState.audioRecordings[card.id] ? '🔊 Ouvir/Gravar' : '🎤 Gravar Voz';
-                let el = document.createElement('div');
-                el.className = 'p-2 rounded bg-slate-800 border border-slate-700 flex justify-between items-center text-xs';
-                el.innerHTML = `
-                    <div><b style="color:${card.color}">${card.name}</b> (${card.rarity}) x${count}</div>
-                    <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 px-2 py-1 rounded text-[10px] font-bold">${hasAudio}</button>
+                if(count > 0) uniqueCount++;
+                totalCount += count;
+                let hasAudio = playerState.audioRecordings[card.id] ? '🔊 Gravado' : '🎤 Gravar Som';
+
+                let cardEl = document.createElement('div');
+                cardEl.className = `p-4 rounded-xl border flex justify-between items-center bg-slate-900/80 ${count > 0 ? 'border-amber-500/50' : 'border-slate-800 opacity-50'}`;
+                cardEl.innerHTML = `
+                    <div>
+                        <div class="font-bold text-sm" style="color: ${card.color}">${card.name}</div>
+                        <div class="text-xs text-slate-400">Raridade: ${card.rarity} | Qtd: x${count}</div>
+                        <div class="text-[10px] text-emerald-400 mt-1">${card.bonus}</div>
+                    </div>
+                    <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs font-bold">${hasAudio}</button>
                 `;
-                grid.appendChild(el);
+                grid.appendChild(cardEl);
             });
+
+            document.getElementById('stat-unique').innerText = `${uniqueCount}/${DATABASE_CARDS.length}`;
+            document.getElementById('stat-total').innerText = totalCount;
             document.getElementById('pack-count-lbl').innerText = playerState.packs;
             document.getElementById('hud-packs').innerText = playerState.packs;
         }
 
         function openGacha() {
-            if(playerState.packs <= 0) { showNotification("Sem pacotes!"); return; }
+            if(playerState.packs <= 0) { showNotification("Sem pacotes! Complete missões."); return; }
             playerState.packs--;
             closeMenus();
             document.getElementById('menu-gacha').classList.remove('hidden');
@@ -364,14 +556,24 @@
             const container = document.getElementById('gacha-card-container');
             container.innerHTML = '';
 
+            let drawn = [];
             for(let i=0; i<2; i++) {
                 let card = DATABASE_CARDS[Math.floor(Math.random() * DATABASE_CARDS.length)];
+                drawn.push(card);
                 playerState.cards[card.id] = (playerState.cards[card.id] || 0) + 1;
-                let el = document.createElement('div');
-                el.className = 'w-24 h-32 bg-slate-800 border border-amber-400 rounded p-2 text-center text-xs flex flex-col justify-between';
-                el.innerHTML = `<b style="color:${card.color}">${card.name}</b><div>${card.rarity}</div>`;
-                container.appendChild(el);
             }
+
+            drawn.forEach(card => {
+                let el = document.createElement('div');
+                el.className = 'w-32 h-44 bg-slate-800 border-2 border-amber-400 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-xl';
+                el.innerHTML = `
+                    <div class="text-xs font-bold text-amber-300">${card.rarity}</div>
+                    <div class="font-black text-sm" style="color: ${card.color}">${card.name}</div>
+                    <div class="text-[10px] text-slate-300">${card.bonus}</div>
+                `;
+                container.appendChild(el);
+            });
+
             updateFarmPets();
         }
 
@@ -382,16 +584,17 @@
 
         function startMission(id) {
             closeMenus();
-            playerState.packs += 1;
-            playerState.coins += 30;
-            showNotification("Missão concluída! +1 Pacote obtido!");
+            playerState.packs += 2;
+            playerState.coins += 50;
+            showNotification("Missão Concluída! Ganhou +2 Pacotes e +50 Moedas!");
             updateAlbumUI();
         }
 
         function showNotification(msg) {
             const box = document.getElementById('notification-box');
-            box.innerText = msg; box.style.opacity = '1';
-            setTimeout(() => box.style.opacity = '0', 2500);
+            box.innerText = msg;
+            box.style.opacity = '1';
+            setTimeout(() => box.style.opacity = '0', 3000);
         }
 
         function onWindowResize() {
