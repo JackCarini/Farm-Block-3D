@@ -34,6 +34,13 @@
                         <div id="hud-packs" class="text-sm font-black text-blue-400">3</div>
                     </div>
                 </div>
+                <!-- BARRA DE VIDA -->
+                <div class="game-panel px-3 py-1.5 flex flex-col justify-center">
+                    <div class="text-[9px] text-red-400 font-bold">VIDA HP</div>
+                    <div class="w-20 bg-slate-800 h-2 rounded-full overflow-hidden mt-0.5 border border-red-500/40">
+                        <div id="hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
+                    </div>
+                </div>
             </div>
             
             <div class="flex gap-1.5 interactive">
@@ -53,15 +60,16 @@
             <div id="joystick-zone" class="relative w-28 h-28 bg-white/10 rounded-full border border-white/20 interactive flex items-center justify-center">
                 <div id="joystick-knob" class="absolute w-10 h-10 bg-white/50 rounded-full shadow-md pointer-events-none"></div>
             </div>
-            <div class="flex gap-3 interactive">
-                <button id="btn-action" onclick="triggerAction()" class="w-16 h-16 bg-emerald-500 hover:bg-emerald-400 border-4 border-emerald-300 rounded-full flex items-center justify-center text-xl shadow-xl active:scale-95 transition">🖐️</button>
-                <button id="btn-jump" onclick="triggerJump()" class="w-16 h-16 bg-blue-500 hover:bg-blue-400 border-4 border-blue-300 rounded-full flex items-center justify-center text-xl shadow-xl active:scale-95 transition">⬆️</button>
+            <div class="flex gap-2 interactive">
+                <button onclick="triggerAttack()" class="w-14 h-14 bg-red-600 hover:bg-red-500 border-2 border-red-400 rounded-full flex items-center justify-center text-lg shadow-xl active:scale-95 transition" title="Atacar">⚔️</button>
+                <button onclick="triggerDefend()" class="w-14 h-14 bg-amber-500 hover:bg-amber-400 border-2 border-amber-300 rounded-full flex items-center justify-center text-lg shadow-xl active:scale-95 transition" title="Defender">🛡️</button>
+                <button onclick="triggerTame()" class="w-14 h-14 bg-purple-600 hover:bg-purple-500 border-2 border-purple-400 rounded-full flex items-center justify-center text-lg shadow-xl active:scale-95 transition" title="Laço / Adestrar">🪢</button>
+                <button onclick="triggerJump()" class="w-14 h-14 bg-blue-500 hover:bg-blue-400 border-2 border-blue-300 rounded-full flex items-center justify-center text-lg shadow-xl active:scale-95 transition" title="Pular">⬆️</button>
             </div>
         </div>
     </div>
 
     <!-- MENUS & MODALS -->
-    <!-- Customization Menu -->
     <div id="menu-custom" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="game-panel w-full max-w-sm p-5 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -84,7 +92,6 @@
         </div>
     </div>
 
-    <!-- Album Menu -->
     <div id="menu-album" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="game-panel w-full max-w-lg p-5 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -103,7 +110,6 @@
         </div>
     </div>
 
-    <!-- Gacha / Pack Opening Modal -->
     <div id="menu-gacha" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex flex-col items-center justify-center p-4">
         <div class="text-center mb-4">
             <h2 class="text-xl font-black text-amber-400 mb-1">ABRINDO PACOTE DE CARDS</h2>
@@ -113,7 +119,6 @@
         <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-5 py-2.5 rounded-xl text-xs">Continuar Jogando</button>
     </div>
 
-    <!-- Missions Menu -->
     <div id="menu-missions" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="game-panel w-full max-w-sm p-5 flex flex-col gap-3">
             <div class="flex justify-between items-center border-b border-slate-700 pb-2">
@@ -153,6 +158,7 @@
         let playerState = {
             coins: 150,
             packs: 3,
+            hp: 100,
             cards: { chicken: 2, pig: 1 },
             audioRecordings: {},
             avatar: { skin: '#fcd34d', shirt: '#3b82f6', pants: '#1e293b', hat: 'straw' }
@@ -163,9 +169,9 @@
         let walkCycle = 0;
         let cameraAngle = 0, cameraDistance = 12, cameraHeight = 6;
         let isMouseDown = false, mousePrevX = 0;
-        let petsInFarm = [];
+        let petsInFarm = [], wildAnimals = [];
         let joyActive = false, joyStartX = 0, joyStartY = 0, joyDeltaX = 0, joyDeltaY = 0;
-        let velocityY = 0, isJumping = false;
+        let velocityY = 0, isJumping = false, isDefending = false;
 
         function init() {
             scene = new THREE.Scene();
@@ -201,6 +207,7 @@
             setupControls();
             updateAlbumUI();
             updateFarmPets();
+            spawnWildAnimals();
 
             window.addEventListener('resize', onWindowResize);
             animLoop();
@@ -373,7 +380,6 @@
             buildAvatarMesh();
         }
 
-        // ANIMAIS COM OLHOS INCLUÍDOS
         function createPetMesh(data) {
             const group = new THREE.Group();
             const mainMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
@@ -381,8 +387,6 @@
             const blackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
             const pinkMat = new THREE.MeshStandardMaterial({ color: 0xf472b6 });
             const yellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
-
-            // Olhos Padrão para os Animais
             const eyeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.05);
 
             if(data.id === 'chicken') {
@@ -392,7 +396,6 @@
                 beak.position.set(0, 0.9, 0.7); group.add(beak);
                 const comb = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.5), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
                 comb.position.set(0, 1.4, 0.1); group.add(comb);
-                
                 const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.35, 1, 0.5); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.35, 1, 0.5); group.add(eye2);
             } 
@@ -401,7 +404,6 @@
                 body.position.y = 0.8; body.castShadow = true; group.add(body);
                 const snout = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.3), new THREE.MeshStandardMaterial({ color: 0xf43f5e }));
                 snout.position.set(0, 0.8, 1.1); group.add(snout);
-
                 const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.4, 1.1, 1.01); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.4, 1.1, 1.01); group.add(eye2);
             }
@@ -410,7 +412,6 @@
                 wool.position.y = 1; wool.castShadow = true; group.add(wool);
                 const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.9), pinkMat);
                 head.position.set(0, 1.1, 1.2); group.add(head);
-
                 const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.3, 1.2, 1.61); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.3, 1.2, 1.61); group.add(eye2);
             }
@@ -419,7 +420,6 @@
                 body.position.y = 1.1; body.castShadow = true; group.add(body);
                 const head = new THREE.Mesh(new THREE.BoxGeometry(1, 0.9, 1), whiteMat);
                 head.position.set(0, 1.5, 1.4); group.add(head);
-
                 const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.35, 1.6, 1.81); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.35, 1.6, 1.81); group.add(eye2);
             }
@@ -428,26 +428,49 @@
                 body.position.y = 1.4; body.castShadow = true; group.add(body);
                 const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 1.3), mainMat);
                 head.position.set(0, 2.9, 1.5); group.add(head);
-
                 const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.3, 3, 1.9); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.3, 3, 1.9); group.add(eye2);
             }
             else if(data.id === 'bull') {
                 const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.7, 3), new THREE.MeshStandardMaterial({ color: 0x78350f }));
                 body.position.y = 1.3; body.castShadow = true; group.add(body);
-
                 const eye1 = new THREE.Mesh(eyeGeo, yellowMat); eye1.position.set(-0.5, 1.7, 1.5); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, yellowMat); eye2.position.set(0.5, 1.7, 1.5); group.add(eye2);
             }
             else if(data.id === 'dragon') {
                 const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.5, 3), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
                 body.position.y = 1.3; body.castShadow = true; group.add(body);
-
                 const eye1 = new THREE.Mesh(eyeGeo, new THREE.MeshBasicMaterial({ color: 0xef4444 })); eye1.position.set(-0.4, 1.7, 1.5); group.add(eye1);
                 const eye2 = new THREE.Mesh(eyeGeo, new THREE.MeshBasicMaterial({ color: 0xef4444 })); eye2.position.set(0.4, 1.7, 1.5); group.add(eye2);
             }
 
             return group;
+        }
+
+        // GERAR ANIMAIS SELVAGENS NO MAPA
+        function spawnWildAnimals() {
+            for(let i = 0; i < 4; i++) {
+                let card = DATABASE_CARDS[Math.floor(Math.random() * DATABASE_CARDS.length)];
+                let group = createPetMesh(card);
+                // Mudar cor ligeiramente para indicar selvagem
+                group.traverse(child => {
+                    if(child.material && child.material.color) {
+                        child.material.color.offsetHSL(0, -0.2, -0.1);
+                    }
+                });
+
+                let rx = (Math.random() - 0.5) * 120;
+                let rz = (Math.random() - 0.5) * 120;
+                group.position.set(rx, 0, rz);
+                scene.add(group);
+
+                wildAnimals.push({
+                    mesh: group,
+                    id: card.id,
+                    hp: 50,
+                    state: 'wild' // wild, attacked, tamed
+                });
+            }
         }
 
         function setupControls() {
@@ -513,22 +536,52 @@
             if(!isJumping) { velocityY = 0.35; isJumping = true; }
         }
 
-        // Interação com a Mão (Toca som do animal mais próximo no cercado)
-        function triggerAction() {
-            let interacted = false;
-            petsInFarm.forEach(pet => {
-                let dist = player.position.distanceTo(pet.mesh.position);
-                if(dist < 7) {
-                    playPetSound(pet.id);
-                    pet.mesh.position.y = 0.8;
-                    setTimeout(() => pet.mesh.position.y = 0, 350);
-                    showNotification(`Interagiste com o bichinho! 🐾`);
-                    interacted = true;
+        // AÇÕES DE COMBATE E DEFESA
+        function triggerAttack() {
+            showNotification("⚔️ Ataque executado com espada!");
+            wildAnimals.forEach(wild => {
+                if(wild.state === 'wild' && player.position.distanceTo(wild.mesh.position) < 5) {
+                    wild.hp -= 25;
+                    wild.state = 'attacked';
+                    showNotification(`Acertaste o animal selvagem! HP restante: ${wild.hp}`);
+                    if(wild.hp <= 0) {
+                        showNotification(`Animal enfraquecido! Pede para adestrar com o laço 🪢.`);
+                    }
                 }
             });
-            if(!interacted) {
-                showNotification("Aproxime-se dos animais no cercado para interagir!");
-            }
+        }
+
+        function triggerDefend() {
+            isDefending = true;
+            showNotification("🛡️ Escudo levantado! Defesa ativa.");
+            setTimeout(() => { isDefending = false; }, 2000);
+        }
+
+        function triggerTame() {
+            let tamedAny = false;
+            wildAnimals.forEach(wild => {
+                if(player.position.distanceTo(wild.mesh.position) < 6) {
+                    if(wild.hp <= 25 || wild.state === 'attacked') {
+                        wild.state = 'tamed';
+                        playerState.cards[wild.id] = (playerState.cards[wild.id] || 0) + 1;
+                        showNotification(`❤️ Animal adestrado com sucesso! Entrou para o Álbum!`);
+                        tamedAny = true;
+                        
+                        // Adicionar coração flutuante simbólico
+                        let heart = document.createElement('div');
+                        heart.innerText = '❤️';
+                        document.body.appendChild(heart);
+                        
+                        // Remover dos selvagens e atualizar cercado
+                        scene.remove(wild.mesh);
+                        updateFarmPets();
+                    } else {
+                        showNotification("O animal ainda está muito bravo! Ataca-o primeiro com a espada ⚔️.");
+                        tamedAny = true;
+                    }
+                }
+            });
+            if(!tamedAny) showNotification("Nenhum animal selvagem por perto para laçar!");
         }
 
         function updateFarmPets() {
@@ -569,7 +622,7 @@
                 let camRightZ = -Math.sin(cameraAngle);
 
                 let dirX = (camForwardX * (-moveZ)) + (camRightX * moveX);
-                let dirZ = (camForwardZ * (-moveZ)) + (camRightZ * moveX);
+                let dirZ = (camForwardZ * (-moveZ)) + (camRightX * moveX);
 
                 if(Math.hypot(dirX, dirZ) > 0.1) {
                     isMoving = true;
@@ -601,13 +654,33 @@
             camera.position.set(camX, player.position.y + cameraHeight, camZ);
             camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
 
+            // AUTOMÁTICO: Som por proximidade nos pets do cercado
             petsInFarm.forEach(pet => {
+                let dist = player.position.distanceTo(pet.mesh.position);
                 pet.timer -= 0.016;
-                if(pet.timer <= 0) {
-                    pet.timer = Math.random() * 10 + 8;
+                if(dist < 4.5 && pet.timer <= 0) {
+                    pet.timer = Math.random() * 12 + 8;
                     playPetSound(pet.id);
                     pet.mesh.position.y = 0.5;
                     setTimeout(() => pet.mesh.position.y = 0, 300);
+                }
+            });
+
+            // IA DOS ANIMAIS SELVAGENS (Perseguição e Ataque)
+            wildAnimals.forEach(wild => {
+                if(wild.state !== 'tamed') {
+                    let dist = player.position.distanceTo(wild.mesh.position);
+                    if(dist < 15) {
+                        wild.mesh.lookAt(player.position.x, wild.mesh.position.y, player.position.z);
+                        wild.mesh.translateZ(0.06); // Persegue o jogador
+
+                        if(dist < 2.5) {
+                            // Causa dano ao jogador
+                            let damage = isDefending ? 2 : 8;
+                            playerState.hp = Math.max(0, playerState.hp - damage * 0.05);
+                            document.getElementById('hp-bar').style.width = playerState.hp + '%';
+                        }
+                    }
                 }
             });
 
@@ -636,8 +709,6 @@
                 const sound = new Audio(playerState.audioRecordings[id]);
                 sound.volume = 0.7;
                 sound.play().catch(e => {});
-            } else {
-                showNotification("Este bichinho ainda não tem som gravado!");
             }
         }
 
