@@ -147,10 +147,10 @@
 
     <script>
         const DATABASE_CARDS = [
-            { id: 'chicken', name: 'Galinha Caipira', rarity: 'Comum', color: '#94a3b8', bonus: 'Produz ovos/moedas' },
-            { id: 'pig', name: 'Porquinho Rosa', rarity: 'Comum', color: '#94a3b8', bonus: 'Procura trufas' },
-            { id: 'sheep', name: 'Ovelha Fofinha', rarity: 'Raro', color: '#3b82f6', bonus: 'Fornece lã extra' },
-            { id: 'cow', name: 'Vaca Malhada', rarity: 'Raro', color: '#3b82f6', bonus: 'Leite nutritivo' },
+            { id: 'chicken', name: 'Galinha Caipira', rarity: 'Comum', color: '#f59e0b', bonus: 'Produz ovos/moedas' },
+            { id: 'pig', name: 'Porquinho Rosa', rarity: 'Comum', color: '#ec4899', bonus: 'Procura trufas' },
+            { id: 'sheep', name: 'Ovelha Fofinha', rarity: 'Raro', color: '#e2e8f0', bonus: 'Fornece lã extra' },
+            { id: 'cow', name: 'Vaca Malhada', rarity: 'Raro', color: '#38bdf8', bonus: 'Leite nutritivo' },
             { id: 'horse', name: 'Cavalo Campeão', rarity: 'Ultra Raro', color: '#a855f7', bonus: 'Velocidade de montaria' },
             { id: 'bull', name: 'Touro Bravo', rarity: 'Épico', color: '#eab308', bonus: 'Força no sítio' },
             { id: 'dragon', name: 'Dragão Dourado Rural', rarity: 'Lendário', color: '#ef4444', bonus: 'Multiplicador lendário' }
@@ -165,6 +165,8 @@
         };
 
         let scene, camera, renderer, player, avatarGroup;
+        let leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup;
+        let walkCycle = 0;
         let cameraAngle = 0, cameraDistance = 12, cameraHeight = 6;
         let isMouseDown = false, mousePrevX = 0;
         let petsInFarm = [];
@@ -185,7 +187,6 @@
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.body.appendChild(renderer.domElement);
 
-            // Iluminação melhorada
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
             scene.add(ambientLight);
 
@@ -197,10 +198,8 @@
             dirLight.shadow.camera.near = 0.5;
             dirLight.shadow.camera.far = 200;
             const d = 40;
-            dirLight.shadow.camera.left = -d;
-            dirLight.shadow.camera.right = d;
-            dirLight.shadow.camera.top = d;
-            dirLight.shadow.camera.bottom = -d;
+            dirLight.shadow.camera.left = -d; dirLight.shadow.camera.right = d;
+            dirLight.shadow.camera.top = d; dirLight.shadow.camera.bottom = -d;
             scene.add(dirLight);
 
             createFarmMap();
@@ -213,9 +212,8 @@
             animLoop();
         }
 
-        // CENÁRIO MELLHORADO
+        // --- MAPA DO SÍTIO ---
         function createFarmMap() {
-            // Chão Principal com grama rica
             const groundGeo = new THREE.PlaneGeometry(300, 300);
             const groundMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.9 });
             const ground = new THREE.Mesh(groundGeo, groundMat);
@@ -223,7 +221,6 @@
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // Caminhos de Terra Batida
             const pathMat = new THREE.MeshStandardMaterial({ color: 0xa1887f, roughness: 0.95 });
             const pathCenter = new THREE.Mesh(new THREE.PlaneGeometry(8, 60), pathMat);
             pathCenter.rotation.x = -Math.PI / 2;
@@ -231,24 +228,19 @@
             pathCenter.receiveShadow = true;
             scene.add(pathCenter);
 
-            // Casa Principal com Varanda e Telhado
             const houseGroup = new THREE.Group();
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xffecb3, roughness: 0.6 });
             const roofMat = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.4 });
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.8 });
             
             const base = new THREE.Mesh(new THREE.BoxGeometry(12, 7, 12), wallMat);
-            base.position.y = 3.5;
-            base.castShadow = true; base.receiveShadow = true;
+            base.position.y = 3.5; base.castShadow = true; base.receiveShadow = true;
             houseGroup.add(base);
 
             const roof = new THREE.Mesh(new THREE.ConeGeometry(10, 5, 4), roofMat);
-            roof.position.y = 9.5;
-            roof.rotation.y = Math.PI / 4;
-            roof.castShadow = true;
+            roof.position.y = 9.5; roof.rotation.y = Math.PI / 4; roof.castShadow = true;
             houseGroup.add(roof);
 
-            // Porta
             const door = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 0.2), woodMat);
             door.position.set(0, 2, 6.05);
             houseGroup.add(door);
@@ -256,19 +248,14 @@
             houseGroup.position.set(-25, 0, -25);
             scene.add(houseGroup);
 
-            // Celeiro
             const barnGroup = new THREE.Group();
             const barnMat = new THREE.MeshStandardMaterial({ color: 0xb71c1c, roughness: 0.5 });
             const barnBase = new THREE.Mesh(new THREE.BoxGeometry(16, 10, 22), barnMat);
-            barnBase.position.y = 5;
-            barnBase.castShadow = true;
-            barnBase.receiveShadow = true;
+            barnBase.position.y = 5; barnBase.castShadow = true; barnBase.receiveShadow = true;
             barnGroup.add(barnBase);
-
             barnGroup.position.set(30, 0, -25);
             scene.add(barnGroup);
 
-            // Cercado dos Animais
             const penGroundMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.95 });
             const penGround = new THREE.Mesh(new THREE.PlaneGeometry(28, 28), penGroundMat);
             penGround.rotation.x = -Math.PI / 2;
@@ -276,7 +263,6 @@
             penGround.receiveShadow = true;
             scene.add(penGround);
 
-            // Cerca em Volta
             const fenceMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41, roughness: 0.8 });
             for(let i = -14; i <= 14; i += 7) {
                 createFencePost(-29, i + 5, fenceMat);
@@ -285,15 +271,13 @@
                 createFencePost(-15 + i, 19, fenceMat);
             }
 
-            // Árvores no Mapa
             createTree(-10, -40); createTree(-40, -10); createTree(15, -45);
             createTree(40, 10); createTree(20, 30); createTree(-35, 25);
         }
 
         function createFencePost(x, z, mat) {
             const post = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3, 0.8), mat);
-            post.position.set(x, 1.5, z);
-            post.castShadow = true;
+            post.position.set(x, 1.5, z); post.castShadow = true;
             scene.add(post);
         }
 
@@ -311,7 +295,7 @@
             scene.add(group);
         }
 
-        // PERSONAGEM COM OLHOS E BOCA
+        // --- PERSONAGEM COM ANIMAÇÃO DE ARTICULAÇÃO ---
         function createPlayer() {
             player = new THREE.Group();
             player.position.set(0, 0, 0);
@@ -323,84 +307,74 @@
         }
 
         function buildAvatarMesh() {
-            while(avatarGroup.children.length > 0){ 
-                avatarGroup.remove(avatarGroup.children[0]); 
-            }
+            while(avatarGroup.children.length > 0){ avatarGroup.remove(avatarGroup.children[0]); }
 
             const skinMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.skin, roughness: 0.6 });
             const shirtMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.shirt, roughness: 0.6 });
             const pantsMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.pants, roughness: 0.6 });
 
-            // Cabeça
             const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), skinMat);
-            head.position.y = 4.2;
-            head.castShadow = true;
+            head.position.y = 4.2; head.castShadow = true;
             avatarGroup.add(head);
 
-            // OLHOS E BOCA (DETALHES ROSTO)
             const eyeGeo = new THREE.BoxGeometry(0.2, 0.2, 0.05);
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
             const pupilMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-            // Olho Esquerdo
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-            leftEye.position.set(-0.3, 4.3, 0.61);
-            avatarGroup.add(leftEye);
-            const leftPupil = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), pupilMat);
-            leftPupil.position.set(-0.27, 4.33, 0.62);
-            avatarGroup.add(leftPupil);
+            const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.3, 4.3, 0.61); avatarGroup.add(leftEye);
+            const leftPupil = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), pupilMat); leftPupil.position.set(-0.27, 4.33, 0.62); avatarGroup.add(leftPupil);
 
-            // Olho Direito
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-            rightEye.position.set(0.3, 4.3, 0.61);
-            avatarGroup.add(rightEye);
-            const rightPupil = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), pupilMat);
-            rightPupil.position.set(0.33, 4.33, 0.62);
-            avatarGroup.add(rightPupil);
+            const rightEye = new THREE.Mesh(eyeGeo, eyeMat); rightEye.position.set(0.3, 4.3, 0.61); avatarGroup.add(rightEye);
+            const rightPupil = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), pupilMat); rightPupil.position.set(0.33, 4.33, 0.62); avatarGroup.add(rightPupil);
 
-            // Boca
             const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.05), new THREE.MeshBasicMaterial({ color: 0x881111 }));
-            mouth.position.set(0, 3.95, 0.61);
-            avatarGroup.add(mouth);
+            mouth.position.set(0, 3.95, 0.61); avatarGroup.add(mouth);
 
-            // Chapéus
             if(playerState.avatar.hat === 'straw') {
                 const hatMat = new THREE.MeshStandardMaterial({ color: 0xd4a373 });
                 const brim = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.2, 2.2), hatMat);
-                brim.position.set(0, 4.85, 0);
-                avatarGroup.add(brim);
+                brim.position.set(0, 4.85, 0); avatarGroup.add(brim);
             } else if(playerState.avatar.hat === 'cap') {
                 const capMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8 });
                 const cap = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.5, 1.4), capMat);
-                cap.position.set(0, 4.85, -0.1);
-                avatarGroup.add(cap);
+                cap.position.set(0, 4.85, -0.1); avatarGroup.add(cap);
             }
 
-            // Tronco e Membros
             const torso = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2, 0.8), shirtMat);
-            torso.position.y = 2.5;
-            torso.castShadow = true;
+            torso.position.y = 2.5; torso.castShadow = true;
             avatarGroup.add(torso);
 
-            const armGeo = new THREE.BoxGeometry(0.5, 1.8, 0.6);
-            const leftArm = new THREE.Mesh(armGeo, shirtMat);
-            leftArm.position.set(1.1, 2.5, 0);
-            avatarGroup.add(leftArm);
+            // Braço Esquerdo (Grupo de Pívoa)
+            leftArmGroup = new THREE.Group();
+            leftArmGroup.position.set(1.1, 3.2, 0);
+            const leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.8, 0.6), shirtMat);
+            leftArmMesh.position.y = -0.7; leftArmMesh.castShadow = true;
+            leftArmGroup.add(leftArmMesh);
+            avatarGroup.add(leftArmGroup);
 
-            const rightArm = new THREE.Mesh(armGeo, shirtMat);
-            rightArm.position.set(-1.1, 2.5, 0);
-            avatarGroup.add(rightArm);
+            // Braço Direito
+            rightArmGroup = new THREE.Group();
+            rightArmGroup.position.set(-1.1, 3.2, 0);
+            const rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.8, 0.6), shirtMat);
+            rightArmMesh.position.y = -0.7; rightArmMesh.castShadow = true;
+            rightArmGroup.add(rightArmMesh);
+            avatarGroup.add(rightArmGroup);
 
-            const legGeo = new THREE.BoxGeometry(0.6, 1.8, 0.6);
-            const leftLeg = new THREE.Mesh(legGeo, pantsMat);
-            leftLeg.position.set(0.5, 0.9, 0);
-            leftLeg.castShadow = true;
-            avatarGroup.add(leftLeg);
+            // Perna Esquerda
+            leftLegGroup = new THREE.Group();
+            leftLegGroup.position.set(0.45, 1.7, 0);
+            const leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.8, 0.6), pantsMat);
+            leftLegMesh.position.y = -0.8; leftLegMesh.castShadow = true;
+            leftLegGroup.add(leftLegMesh);
+            avatarGroup.add(leftLegGroup);
 
-            const rightLeg = new THREE.Mesh(legGeo, pantsMat);
-            rightLeg.position.set(-0.5, 0.9, 0);
-            rightLeg.castShadow = true;
-            avatarGroup.add(rightLeg);
+            // Perna Direita
+            rightLegGroup = new THREE.Group();
+            rightLegGroup.position.set(-0.45, 1.7, 0);
+            const rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.8, 0.6), pantsMat);
+            rightLegMesh.position.y = -0.8; rightLegMesh.castShadow = true;
+            rightLegGroup.add(rightLegMesh);
+            avatarGroup.add(rightLegGroup);
         }
 
         function updateAvatar() {
@@ -411,7 +385,93 @@
             buildAvatarMesh();
         }
 
-        // CONTROLES CORRIGIDOS E ESTÁVEIS
+        // --- MODELAGEM RICA DOS ANIMAIS 3D ---
+        function createPetMesh(data) {
+            const group = new THREE.Group();
+            const mainMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
+            const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const blackMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+            const pinkMat = new THREE.MeshStandardMaterial({ color: 0xf472b6 });
+            const yellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
+
+            if(data.id === 'chicken') {
+                // Corpo Galinha
+                const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1.2), mainMat);
+                body.position.y = 0.8; body.castShadow = true; group.add(body);
+                // Bico
+                const beak = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.4), yellowMat);
+                beak.position.set(0, 0.9, 0.7); group.add(beak);
+                // Crista
+                const comb = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.5), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
+                comb.position.set(0, 1.4, 0.1); group.add(comb);
+            } 
+            else if(data.id === 'pig') {
+                // Porco
+                const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 2), pinkMat);
+                body.position.y = 0.8; body.castShadow = true; group.add(body);
+                // Focinho
+                const snout = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.3), new THREE.MeshStandardMaterial({ color: 0xf43f5e }));
+                snout.position.set(0, 0.8, 1.1); group.add(snout);
+                // Orelhas
+                const ear1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.1), pinkMat);
+                ear1.position.set(-0.5, 1.4, 0.6); group.add(ear1);
+                const ear2 = ear1.clone(); ear2.position.set(0.5, 1.4, 0.6); group.add(ear2);
+            }
+            else if(data.id === 'sheep') {
+                // Ovelha com Lã
+                const wool = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.3, 2.2), whiteMat);
+                wool.position.y = 1; wool.castShadow = true; group.add(wool);
+                // Cabeça
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.9), pinkMat);
+                head.position.set(0, 1.1, 1.2); group.add(head);
+            }
+            else if(data.id === 'cow') {
+                // Vaca Malhada
+                const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.4, 2.6), whiteMat);
+                body.position.y = 1.1; body.castShadow = true; group.add(body);
+                // Manchas Pretas
+                const spot = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), blackMat);
+                spot.position.set(0.5, 1.2, 0.2); group.add(spot);
+                // Cabeça e Chifres
+                const head = new THREE.Mesh(new THREE.BoxGeometry(1, 0.9, 1), whiteMat);
+                head.position.set(0, 1.5, 1.4); group.add(head);
+                const horn1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2), yellowMat);
+                horn1.position.set(-0.5, 2.1, 1.4); group.add(horn1);
+                const horn2 = horn1.clone(); horn2.position.set(0.5, 2.1, 1.4); group.add(horn2);
+            }
+            else if(data.id === 'horse') {
+                // Cavalo
+                const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 2.8), mainMat);
+                body.position.y = 1.4; body.castShadow = true; group.add(body);
+                // Pescoço e Cabeça
+                const neck = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.9), mainMat);
+                neck.position.set(0, 2.2, 1.1); neck.rotation.x = -0.3; group.add(neck);
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 1.3), mainMat);
+                head.position.set(0, 2.9, 1.5); group.add(head);
+            }
+            else if(data.id === 'bull') {
+                // Touro Robustão
+                const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.7, 3), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+                body.position.y = 1.3; body.castShadow = true; group.add(body);
+                // Chifres Grandes
+                const horn1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.3), yellowMat);
+                horn1.position.set(-1.1, 2.1, 1.4); group.add(horn1);
+                const horn2 = horn1.clone(); horn2.position.set(1.1, 2.1, 1.4); group.add(horn2);
+            }
+            else if(data.id === 'dragon') {
+                // Dragão Dourado
+                const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.5, 3), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
+                body.position.y = 1.3; body.castShadow = true; group.add(body);
+                // Asas
+                const wing1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 1.5), yellowMat);
+                wing1.position.set(1.8, 2, 0); wing1.rotation.z = 0.3; group.add(wing1);
+                const wing2 = wing1.clone(); wing2.position.set(-1.8, 2, 0); wing2.rotation.z = -0.3; group.add(wing2);
+            }
+
+            return group;
+        }
+
+        // --- CONTROLES & MOVIMENTAÇÃO ---
         function setupControls() {
             let touchCamStartX = 0;
             window.addEventListener('touchstart', (e) => {
@@ -500,53 +560,55 @@
             document.getElementById('stat-pets').innerText = petsInFarm.length;
         }
 
-        function createPetMesh(data) {
-            const group = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({ color: data.color });
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 1.8), mat);
-            body.position.y = 0.6; body.castShadow = true;
-            group.add(body);
-
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 0.8), mat);
-            head.position.set(0, 1.3, 0.8); head.castShadow = true;
-            group.add(head);
-            return group;
-        }
-
         function animLoop() {
             requestAnimationFrame(animLoop);
 
-            if(joyActive) {
-                // Direção normalizada do Joystick (-1 a 1)
-                let moveX = joyDeltaX / 45; 
-                let moveZ = joyDeltaY / 45; // Empurrar para cima é negativo no Y da tela (FRENTE)
+            let isMoving = false;
 
-                // Vetores da Câmera
+            if(joyActive) {
+                let moveX = joyDeltaX / 45; 
+                let moveZ = joyDeltaY / 45;
+
                 let camForwardX = -Math.sin(cameraAngle);
                 let camForwardZ = -Math.cos(cameraAngle);
                 let camRightX = Math.cos(cameraAngle);
                 let camRightZ = -Math.sin(cameraAngle);
 
-                // Mover para FRENTE empurra no sentido camForward, para TRÁS no oposto
                 let dirX = (camForwardX * (-moveZ)) + (camRightX * moveX);
                 let dirZ = (camForwardZ * (-moveZ)) + (camRightZ * moveX);
 
-                player.position.x += dirX * 0.18;
-                player.position.z += dirZ * 0.18;
-                player.rotation.y = Math.atan2(dirX, dirZ);
+                if(Math.hypot(dirX, dirZ) > 0.1) {
+                    isMoving = true;
+                    player.position.x += dirX * 0.18;
+                    player.position.z += dirZ * 0.18;
+                    player.rotation.y = Math.atan2(dirX, dirZ);
+                }
+            }
+
+            // Animação de Passos (Pernas e Braços)
+            if(isMoving) {
+                walkCycle += 0.2;
+                leftArmGroup.rotation.x = Math.sin(walkCycle) * 0.6;
+                rightArmGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
+                leftLegGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
+                rightLegGroup.rotation.x = Math.sin(walkCycle) * 0.6;
+            } else {
+                // Suaviza para posição em pé
+                leftArmGroup.rotation.x *= 0.8;
+                rightArmGroup.rotation.x *= 0.8;
+                leftLegGroup.rotation.x *= 0.8;
+                rightLegGroup.rotation.x *= 0.8;
             }
 
             player.position.y += velocityY;
             if(player.position.y > 0) velocityY -= 0.02;
             else { player.position.y = 0; isJumping = false; velocityY = 0; }
 
-            // Câmera Acompanha o Personagem
             let camX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
             let camZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
             camera.position.set(camX, player.position.y + cameraHeight, camZ);
             camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
 
-            // Animação de som dos pets
             petsInFarm.forEach(pet => {
                 pet.timer -= 0.016;
                 if(pet.timer <= 0) {
@@ -560,6 +622,7 @@
             renderer.render(scene, camera);
         }
 
+        // --- SISTEMA DE GRAVAÇÃO DE VOZ ---
         function recordAudioForCard(id) {
             navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
                 let mr = new MediaRecorder(stream);
@@ -572,7 +635,7 @@
                     updateAlbumUI();
                 };
                 mr.start();
-                showNotification("Gravando som do bichinho...");
+                showNotification("Gravando som do bichinho... (Fale agora!)");
                 setTimeout(() => { if(mr.state === 'recording') mr.stop(); }, 2500);
             }).catch(() => showNotification("Erro ao aceder ao microfone."));
         }
@@ -580,7 +643,7 @@
         function playPetSound(id) {
             if(playerState.audioRecordings[id]) {
                 const sound = new Audio(playerState.audioRecordings[id]);
-                sound.volume = 0.5;
+                sound.volume = 0.6;
                 sound.play().catch(e => {});
             }
         }
@@ -607,7 +670,7 @@
                 let count = playerState.cards[card.id] || 0;
                 if(count > 0) uniqueCount++;
                 totalCount += count;
-                let hasAudio = playerState.audioRecordings[card.id] ? '🔊 Gravado' : '🎤 Gravar Som';
+                let hasAudio = playerState.audioRecordings[card.id];
 
                 let cardEl = document.createElement('div');
                 cardEl.className = `p-4 rounded-xl border flex justify-between items-center bg-slate-900/80 ${count > 0 ? 'border-amber-500/50' : 'border-slate-800 opacity-50'}`;
@@ -617,7 +680,10 @@
                         <div class="text-xs text-slate-400">Raridade: ${card.rarity} | Qtd: x${count}</div>
                         <div class="text-[10px] text-emerald-400 mt-1">${card.bonus}</div>
                     </div>
-                    <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs font-bold">${hasAudio}</button>
+                    <div class="flex gap-2">
+                        ${hasAudio ? `<button onclick="playPetSound('${card.id}')" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-xs font-bold">▶️ Ouvir</button>` : ''}
+                        <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs font-bold">🎤 ${hasAudio ? 'Regravar' : 'Gravar'}</button>
+                    </div>
                 `;
                 grid.appendChild(cardEl);
             });
