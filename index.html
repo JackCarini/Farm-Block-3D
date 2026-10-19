@@ -11,6 +11,8 @@
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; z-index: 10; }
         .interactive { pointer-events: auto; }
         .game-panel { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        @keyframes floatAnim { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-10px) scale(1.05); } }
+        .float-card { animation: floatAnim 2s ease-in-out infinite; }
     </style>
 </head>
 <body>
@@ -34,13 +36,6 @@
                         <div id="hud-packs" class="text-sm font-black text-blue-400">3</div>
                     </div>
                 </div>
-                <!-- BARRA DE VIDA -->
-                <div class="game-panel px-3 py-1.5 flex flex-col justify-center">
-                    <div class="text-[9px] text-red-400 font-bold">VIDA HP</div>
-                    <div class="w-20 bg-slate-800 h-2 rounded-full overflow-hidden mt-0.5 border border-red-500/40">
-                        <div id="hp-bar" class="bg-red-500 h-full w-full transition-all duration-300"></div>
-                    </div>
-                </div>
             </div>
             
             <div class="flex gap-1.5 interactive">
@@ -50,21 +45,18 @@
             </div>
         </div>
 
-        <!-- NOTIFICAÇÃO CENTRAL DA TELA -->
+        <!-- NOTIFICAÇÃO CENTRAL -->
         <div id="notification-box" class="self-center bg-black/80 border border-amber-500/50 text-amber-300 px-5 py-2 rounded-full text-xs font-semibold opacity-0 transition-opacity duration-300 pointer-events-none text-center">
             Aviso do Jogo
         </div>
 
-        <!-- CONTROLES MÓVEIS (JOYSTICK + BOTOES DE AÇÃO) -->
+        <!-- CONTROLES MÓVEIS -->
         <div class="flex justify-between items-end w-full pb-2">
             <div id="joystick-zone" class="relative w-28 h-28 bg-white/10 rounded-full border border-white/20 interactive flex items-center justify-center">
                 <div id="joystick-knob" class="absolute w-10 h-10 bg-white/50 rounded-full shadow-md pointer-events-none"></div>
             </div>
             <div class="flex gap-2 interactive">
-                <button onclick="triggerAttack()" class="w-13 h-13 sm:w-14 sm:h-14 bg-red-600 hover:bg-red-500 border-2 border-red-400 rounded-full flex items-center justify-center text-base sm:text-lg shadow-xl active:scale-95 transition" title="Atacar com Espada">⚔️</button>
-                <button onclick="triggerDefend()" class="w-13 h-13 sm:w-14 sm:h-14 bg-amber-500 hover:bg-amber-400 border-2 border-amber-300 rounded-full flex items-center justify-center text-base sm:text-lg shadow-xl active:scale-95 transition" title="Defender">🛡️</button>
-                <button onclick="triggerTame()" class="w-13 h-13 sm:w-14 sm:h-14 bg-purple-600 hover:bg-purple-500 border-2 border-purple-400 rounded-full flex items-center justify-center text-base sm:text-lg shadow-xl active:scale-95 transition" title="Laço / Adestrar">🪢</button>
-                <button onclick="triggerJump()" class="w-13 h-13 sm:w-14 sm:h-14 bg-blue-500 hover:bg-blue-400 border-2 border-blue-300 rounded-full flex items-center justify-center text-base sm:text-lg shadow-xl active:scale-95 transition" title="Pular">⬆️</button>
+                <button onclick="triggerJump()" class="w-14 h-14 bg-blue-500 hover:bg-blue-400 border-2 border-blue-300 rounded-full flex items-center justify-center text-lg shadow-xl active:scale-95 transition" title="Pular">⬆️</button>
             </div>
         </div>
     </div>
@@ -110,13 +102,17 @@
         </div>
     </div>
 
+    <!-- GACHA / ABERTURA DE PACOTES COM ENVELOPE MÁGICO -->
     <div id="menu-gacha" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex flex-col items-center justify-center p-4">
         <div class="text-center mb-4">
             <h2 class="text-xl font-black text-amber-400 mb-1">ABRINDO PACOTE DE CARDS</h2>
-            <p class="text-xs text-slate-400">Novos animais descobertos!</p>
+            <p id="gacha-instruction" class="text-xs text-slate-300 animate-pulse">Toque no envelope misterioso para abrir!</p>
         </div>
-        <div id="gacha-card-container" class="flex flex-wrap justify-center gap-3 mb-6"></div>
-        <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-5 py-2.5 rounded-xl text-xs">Continuar Jogando</button>
+        
+        <!-- Contorno do Envelope / Revelação -->
+        <div id="gacha-reveal-area" class="flex flex-wrap justify-center items-center gap-6 mb-8 min-h-[300px]"></div>
+
+        <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-6 py-3 rounded-xl text-xs hidden">Continuar Jogando</button>
     </div>
 
     <div id="menu-missions" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
@@ -146,34 +142,33 @@
 
     <script>
         const DATABASE_CARDS = [
-            { id: 'chicken', name: 'Galinha Caipira', rarity: 'Comum', color: '#f59e0b', bonus: 'Produz ovos/moedas' },
-            { id: 'pig', name: 'Porquinho Rosa', rarity: 'Comum', color: '#ec4899', bonus: 'Procura trufas' },
-            { id: 'sheep', name: 'Ovelha Fofinha', rarity: 'Raro', color: '#e2e8f0', bonus: 'Fornece lã extra' },
-            { id: 'cow', name: 'Vaca Malhada', rarity: 'Raro', color: '#38bdf8', bonus: 'Leite nutritivo' },
-            { id: 'horse', name: 'Cavalo Campeão', rarity: 'Ultra Raro', color: '#a855f7', bonus: 'Velocidade de montaria' },
-            { id: 'bull', name: 'Touro Bravo', rarity: 'Épico', color: '#eab308', bonus: 'Força no sítio' },
-            { id: 'dragon', name: 'Dragão Dourado Rural', rarity: 'Lendário', color: '#ef4444', bonus: 'Multiplicador lendário' }
+            { id: 'chicken', name: 'Galinha Caipira', rarity: 'Comum', color: '#f59e0b', glowColor: 'rgba(255,255,255,0.8)', bonus: 'Produz ovos/moedas' },
+            { id: 'pig', name: 'Porquinho Rosa', rarity: 'Comum', color: '#ec4899', glowColor: 'rgba(255,255,255,0.8)', bonus: 'Procura trufas' },
+            { id: 'sheep', name: 'Ovelha Fofinha', rarity: 'Raro', color: '#38bdf8', glowColor: 'rgba(250,204,21,0.9)', bonus: 'Fornece lã extra' },
+            { id: 'cow', name: 'Vaca Malhada', rarity: 'Raro', color: '#38bdf8', glowColor: 'rgba(250,204,21,0.9)', bonus: 'Leite nutritivo' },
+            { id: 'horse', name: 'Cavalo Campeão', rarity: 'Ultra Raro', color: '#a855f7', glowColor: 'rgba(239,68,68,0.9)', bonus: 'Velocidade de montaria' },
+            { id: 'bull', name: 'Touro Bravo', rarity: 'Épico', color: '#eab308', glowColor: 'rgba(239,68,68,0.9)', bonus: 'Força no sítio' },
+            { id: 'dragon', name: 'Dragão Dourado Rural', rarity: 'Lendário', color: '#ef4444', glowColor: 'rgba(168,85,247,0.95)', bonus: 'Multiplicador lendário' }
         ];
 
         let playerState = {
             coins: 150,
             packs: 3,
-            hp: 100,
             cards: { chicken: 2, pig: 1 },
             audioRecordings: {},
             avatar: { skin: '#fcd34d', shirt: '#3b82f6', pants: '#1e293b', hat: 'straw' }
         };
 
         let scene, camera, renderer, player, avatarGroup;
-        let leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup, swordMesh;
+        let leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup;
         let doorMesh, gateMesh, bedPosition = new THREE.Vector3();
         let houseColliders = [];
         let walkCycle = 0;
         let cameraAngle = 0, cameraDistance = 12, cameraHeight = 6;
         let isMouseDown = false, mousePrevX = 0;
-        let petsInFarm = [], wildAnimals = [];
+        let petsInFarm = [];
         let joyActive = false, joyStartX = 0, joyStartY = 0, joyDeltaX = 0, joyDeltaY = 0;
-        let velocityY = 0, isJumping = false, isDefending = false, isAttacking = false;
+        let velocityY = 0, isJumping = false;
 
         function init() {
             scene = new THREE.Scene();
@@ -192,7 +187,6 @@
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
             scene.add(ambientLight);
 
-            // Luz do Sol
             const dirLight = new THREE.DirectionalLight(0xfffaed, 0.95);
             dirLight.position.set(60, 100, 40);
             dirLight.castShadow = true;
@@ -205,7 +199,6 @@
             dirLight.shadow.camera.top = d; dirLight.shadow.camera.bottom = -d;
             scene.add(dirLight);
 
-            // Sol no Céu
             const sunGeo = new THREE.SphereGeometry(6, 16, 16);
             const sunMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
             const sun = new THREE.Mesh(sunGeo, sunMat);
@@ -217,19 +210,15 @@
             setupControls();
             updateAlbumUI();
             updateFarmPets();
-            spawnWildAnimals();
 
             window.addEventListener('resize', onWindowResize);
             animLoop();
         }
 
-        // AMBIENTE DO SÍTIO COMPLETO
         function createFarmEnvironment() {
-            // Chão Principal
             const ground = new THREE.Mesh(new THREE.PlaneGeometry(350, 350), new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.9 }));
             ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
-            // Montanhas ao Fundo
             for(let i = 0; i < 8; i++) {
                 let m = new THREE.Mesh(new THREE.ConeGeometry(30 + Math.random()*20, 40 + Math.random()*20, 5), new THREE.MeshStandardMaterial({ color: 0x388e3c, roughness: 0.9 }));
                 let angle = (i / 8) * Math.PI * 2;
@@ -237,58 +226,44 @@
                 scene.add(m);
             }
 
-            // Riacho com Ponte
             const river = new THREE.Mesh(new THREE.PlaneGeometry(16, 200), new THREE.MeshStandardMaterial({ color: 0x29b6f6, roughness: 0.1, transparent: true, opacity: 0.8 }));
             river.rotation.x = -Math.PI / 2; river.position.set(20, 0.02, 0); scene.add(river);
 
             const bridge = new THREE.Mesh(new THREE.BoxGeometry(18, 0.6, 10), new THREE.MeshStandardMaterial({ color: 0x5d4037 }));
             bridge.position.set(20, 0.3, -10); bridge.receiveShadow = true; scene.add(bridge);
 
-            // Estrada de Terra
             const pathCenter = new THREE.Mesh(new THREE.PlaneGeometry(10, 80), new THREE.MeshStandardMaterial({ color: 0xa1887f, roughness: 0.95 }));
             pathCenter.rotation.x = -Math.PI / 2; pathCenter.position.set(-10, 0.03, -10); scene.add(pathCenter);
 
-            // CASA MOBILIADA E COM PAREDES SÓLIDAS
             const hX = -25, hZ = -25;
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xffecb3, roughness: 0.6 });
             const roofMat = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.4 });
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.8 });
 
-            // Paredes (Com Colisão)
             const w1 = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 0.6), wallMat); w1.position.set(hX, 4, hZ - 7); scene.add(w1); houseColliders.push(w1);
             const w2 = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 0.6), wallMat); w2.position.set(hX, 4, hZ + 7); scene.add(w2); houseColliders.push(w2);
             const w3 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8, 14), wallMat); w3.position.set(hX - 7, 4, hZ); scene.add(w3); houseColliders.push(w3);
             const w4 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8, 14), wallMat); w4.position.set(hX + 7, 4, hZ); scene.add(w4); houseColliders.push(w4);
 
-            // Telhado
             const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 6, 4), roofMat);
             roof.position.set(hX, 11, hZ); roof.rotation.y = Math.PI / 4; scene.add(roof);
 
-            // Porta Interativa
             doorMesh = new THREE.Mesh(new THREE.BoxGeometry(3, 5, 0.3), woodMat);
             doorMesh.position.set(hX, 2.5, hZ + 6.8); scene.add(doorMesh);
 
-            // Janelas de Vidro
             const winMat = new THREE.MeshStandardMaterial({ color: 0xe0f7fa, transparent: true, opacity: 0.6 });
             const win1 = new THREE.Mesh(new THREE.BoxGeometry(3, 2, 0.2), winMat); win1.position.set(hX - 3.5, 5, hZ + 6.9); scene.add(win1);
             const win2 = win1.clone(); win2.position.set(hX + 3.5, 5, hZ + 6.9); scene.add(win2);
 
-            // MOBÍLIA INTERNA
-            // Cama
             const bed = new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 5), new THREE.MeshStandardMaterial({ color: 0x1565c0 }));
             bed.position.set(hX - 4, 0.6, hZ - 4); scene.add(bed); bedPosition.set(hX - 4, 0, hZ - 4);
 
-            // TV & Móvel
             const tvStand = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 1.5), woodMat); tvStand.position.set(hX + 4, 0.75, hZ - 5); scene.add(tvStand);
             const tv = new THREE.Mesh(new THREE.BoxGeometry(3, 2, 0.3), new THREE.MeshBasicMaterial({ color: 0x111111 })); tv.position.set(hX + 4, 2.5, hZ - 5); scene.add(tv);
 
-            // Mesa e Cadeiras
             const table = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 1.5), woodMat); table.position.set(hX, 0.75, hZ); scene.add(table);
-
-            // Fogão Caipira
             const stove = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2, 2), new THREE.MeshStandardMaterial({ color: 0x37474f })); stove.position.set(hX + 4, 1, hZ + 3); scene.add(stove);
 
-            // CERCADO COM PORTÃO
             const penGround = new THREE.Mesh(new THREE.PlaneGeometry(28, 28), new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.95 }));
             penGround.rotation.x = -Math.PI / 2; penGround.position.set(-15, 0.03, 5); scene.add(penGround);
 
@@ -300,11 +275,9 @@
                 createFencePost(-15 + i, 19, fenceMat);
             }
 
-            // Portão do Cercado
             gateMesh = new THREE.Mesh(new THREE.BoxGeometry(5, 2.2, 0.3), fenceMat);
             gateMesh.position.set(-15, 1.1, -9); scene.add(gateMesh);
 
-            // Árvores
             createTree(-10, -40); createTree(-40, -10); createTree(35, -35); createTree(40, 20);
         }
 
@@ -324,7 +297,6 @@
             group.position.set(x, 0, z); scene.add(group);
         }
 
-        // PERSONAGEM REALISTA COM ESPADA NA MÃO
         function createPlayer() {
             player = new THREE.Group(); player.position.set(0, 0, 0); scene.add(player);
             avatarGroup = new THREE.Group(); player.add(avatarGroup);
@@ -338,11 +310,9 @@
             const shirtMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.shirt, roughness: 0.5 });
             const pantsMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.pants, roughness: 0.5 });
 
-            // Cabeça Suave/Arredondada
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), skinMat);
             head.position.y = 4.2; head.scale.set(1, 1.1, 1); head.castShadow = true; avatarGroup.add(head);
 
-            // Olhos e Rosto
             const eyeGeo = new THREE.SphereGeometry(0.08, 8, 8);
             const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
             const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.22, 4.3, 0.62); avatarGroup.add(leftEye);
@@ -354,33 +324,19 @@
                 brim.position.set(0, 4.8, 0); avatarGroup.add(brim);
             }
 
-            // Torso Proporcional
             const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.7, 2, 12), shirtMat);
             torso.position.y = 2.5; torso.castShadow = true; avatarGroup.add(torso);
 
-            // Braço Esquerdo
             leftArmGroup = new THREE.Group(); leftArmGroup.position.set(1, 3.2, 0);
             const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 1.8), shirtMat);
             leftArm.position.y = -0.8; leftArm.castShadow = true; leftArmGroup.add(leftArm);
             avatarGroup.add(leftArmGroup);
 
-            // Braço Direito (Com Espada na Mão)
             rightArmGroup = new THREE.Group(); rightArmGroup.position.set(-1, 3.2, 0);
             const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 1.8), shirtMat);
             rightArm.position.y = -0.8; rightArm.castShadow = true; rightArmGroup.add(rightArm);
-
-            // Espada 3D na Mão
-            swordMesh = new THREE.Group();
-            const blade = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2, 0.4), new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8, roughness: 0.2 }));
-            blade.position.y = 1; blade.castShadow = true; swordMesh.add(blade);
-            const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x5d4037 }));
-            hilt.position.y = -0.2; swordMesh.add(hilt);
-            swordMesh.position.set(0, -1.5, 0.4); swordMesh.rotation.x = Math.PI / 4;
-            rightArmGroup.add(swordMesh);
-
             avatarGroup.add(rightArmGroup);
 
-            // Pernas Articuladas
             leftLegGroup = new THREE.Group(); leftLegGroup.position.set(0.4, 1.6, 0);
             const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 1.8), pantsMat);
             leftLeg.position.y = -0.8; leftLeg.castShadow = true; leftLegGroup.add(leftLeg);
@@ -400,7 +356,6 @@
             buildAvatarMesh();
         }
 
-        // MODELOS ANIMAIS COM PERNAS E FORMAS SUAVES
         function createPetMesh(data) {
             const group = new THREE.Group();
             const mainMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.6 });
@@ -408,19 +363,16 @@
 
             if(data.id === 'chicken') {
                 const body = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 12), mainMat); body.position.y = 0.9; group.add(body);
-                // 2 Pernas
                 const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.6), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
                 leg1.position.set(-0.2, 0.3, 0); group.add(leg1);
                 const leg2 = leg1.clone(); leg2.position.set(0.2, 0.3, 0); group.add(leg2);
             } else {
-                // Quadrupedes (Porco, Vaca, Cavalo, Ovelha, Touro, Dragão)
                 const body = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 2, 12), mainMat);
                 body.rotation.x = Math.PI / 2; body.position.y = 1.2; group.add(body);
                 
                 const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 12, 12), mainMat);
                 head.position.set(0, 1.7, 1); group.add(head);
 
-                // 4 Pernas Articuladas
                 for(let x of [-0.5, 0.5]) {
                     for(let z of [-0.7, 0.7]) {
                         let leg = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.15, 1.2), legMat);
@@ -429,19 +381,6 @@
                 }
             }
             return group;
-        }
-
-        function spawnWildAnimals() {
-            for(let i = 0; i < 4; i++) {
-                let card = DATABASE_CARDS[Math.floor(Math.random() * DATABASE_CARDS.length)];
-                let group = createPetMesh(card);
-                let rx = (Math.random() - 0.5) * 120;
-                let rz = (Math.random() - 0.5) * 120;
-                group.position.set(rx, 0, rz);
-                scene.add(group);
-
-                wildAnimals.push({ mesh: group, id: card.id, hp: 50, state: 'wild' });
-            }
         }
 
         function setupControls() {
@@ -490,48 +429,6 @@
 
         function triggerJump() { if(!isJumping) { velocityY = 0.35; isJumping = true; } }
 
-        function triggerAttack() {
-            if(isAttacking) return;
-            isAttacking = true;
-            showNotification("⚔️ Golpe de espada!");
-            
-            // Animação do Golpe
-            rightArmGroup.rotation.x = -Math.PI / 2;
-            setTimeout(() => { rightArmGroup.rotation.x = 0; isAttacking = false; }, 300);
-
-            wildAnimals.forEach(wild => {
-                if(wild.state === 'wild' && player.position.distanceTo(wild.mesh.position) < 5) {
-                    wild.hp -= 25;
-                    showNotification(`Acertaste o animal selvagem! HP restante: ${wild.hp}`);
-                }
-            });
-        }
-
-        function triggerDefend() {
-            isDefending = true; showNotification("🛡️ Escudo erguido!");
-            setTimeout(() => { isDefending = false; }, 2000);
-        }
-
-        function triggerTame() {
-            let tamedAny = false;
-            wildAnimals.forEach(wild => {
-                if(player.position.distanceTo(wild.mesh.position) < 6) {
-                    if(wild.hp <= 25) {
-                        wild.state = 'tamed';
-                        playerState.cards[wild.id] = (playerState.cards[wild.id] || 0) + 1;
-                        showNotification(`❤️ Animal adestrado com sucesso! Entrou no sítio!`);
-                        tamedAny = true;
-                        scene.remove(wild.mesh);
-                        updateFarmPets();
-                    } else {
-                        showNotification("O animal ainda está bravo! Ataca-o com a espada ⚔️ primeiro.");
-                        tamedAny = true;
-                    }
-                }
-            });
-            if(!tamedAny) showNotification("Nenhum animal selvagem por perto para laçar!");
-        }
-
         function updateFarmPets() {
             petsInFarm.forEach(pet => scene.remove(pet.mesh));
             petsInFarm = [];
@@ -572,7 +469,6 @@
                     let nextX = player.position.x + dirX * 0.18;
                     let nextZ = player.position.z + dirZ * 0.18;
 
-                    // Colisão simples com as paredes da casa
                     let blocked = false;
                     houseColliders.forEach(c => {
                         if(Math.hypot(nextX - c.position.x, nextZ - c.position.z) < 2) blocked = true;
@@ -587,16 +483,15 @@
                 }
             }
 
-            // Animação de caminhada articulada
             if(isMoving) {
                 walkCycle += 0.2;
                 leftArmGroup.rotation.x = Math.sin(walkCycle) * 0.6;
-                if(!isAttacking) rightArmGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
+                rightArmGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
                 leftLegGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
                 rightLegGroup.rotation.x = Math.sin(walkCycle) * 0.6;
             } else {
                 leftArmGroup.rotation.x *= 0.8;
-                if(!isAttacking) rightArmGroup.rotation.x *= 0.8;
+                rightArmGroup.rotation.x *= 0.8;
                 leftLegGroup.rotation.x *= 0.8;
                 rightLegGroup.rotation.x *= 0.8;
             }
@@ -605,25 +500,21 @@
             if(player.position.y > 0) velocityY -= 0.02;
             else { player.position.y = 0; isJumping = false; velocityY = 0; }
 
-            // Câmera 360 Acompanhando o Boneco
             let camX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
             let camZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
             camera.position.set(camX, player.position.y + cameraHeight, camZ);
             camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
 
-            // Interação de Abertura Automática da Porta e Portão
             if(player.position.distanceTo(doorMesh.position) < 4) doorMesh.position.x = -22;
             else doorMesh.position.x = -25;
 
             if(player.position.distanceTo(gateMesh.position) < 4) gateMesh.position.x = -12;
             else gateMesh.position.x = -15;
 
-            // Sugestão de Sono ao aproximar da cama
             if(player.position.distanceTo(bedPosition) < 3.5) {
                 showNotification("Está na hora de dormir! 🌙");
             }
 
-            // Som por proximidade dos animais no cercado
             petsInFarm.forEach(pet => {
                 let dist = player.position.distanceTo(pet.mesh.position);
                 pet.timer -= 0.016;
@@ -632,23 +523,6 @@
                     playPetSound(pet.id);
                     pet.mesh.position.y = 0.5;
                     setTimeout(() => pet.mesh.position.y = 0, 300);
-                }
-            });
-
-            // Perseguição dos Animais Selvagens
-            wildAnimals.forEach(wild => {
-                if(wild.state !== 'tamed') {
-                    let dist = player.position.distanceTo(wild.mesh.position);
-                    if(dist < 15) {
-                        wild.mesh.lookAt(player.position.x, wild.mesh.position.y, player.position.z);
-                        wild.mesh.translateZ(0.06);
-
-                        if(dist < 2.5) {
-                            let damage = isDefending ? 2 : 8;
-                            playerState.hp = Math.max(0, playerState.hp - damage * 0.05);
-                            document.getElementById('hp-bar').style.width = playerState.hp + '%';
-                        }
-                    }
                 }
             });
 
@@ -721,31 +595,49 @@
             document.getElementById('hud-packs').innerText = playerState.packs;
         }
 
+        // SISTEMA DE GACHA COM ENVELOPE MÁGICO ILUMINADO E REVELAÇÃO DO ANIMAL
+        let currentDrawnCard = null;
+
         function openGacha() {
             if(playerState.packs <= 0) { showNotification("Sem pacotes! Complete missões."); return; }
             playerState.packs--; closeMenus();
-            document.getElementById('menu-gacha').classList.remove('hidden');
             
-            const container = document.getElementById('gacha-card-container'); container.innerHTML = '';
+            document.getElementById('menu-gacha').classList.remove('hidden');
+            document.getElementById('gacha-close-btn').classList.add('hidden');
+            document.getElementById('gacha-instruction').innerText = "Toque no envelope misterioso para abrir!";
 
-            let drawn = [];
-            for(let i=0; i<2; i++) {
-                let card = DATABASE_CARDS[Math.floor(Math.random() * DATABASE_CARDS.length)];
-                drawn.push(card); playerState.cards[card.id] = (playerState.cards[card.id] || 0) + 1;
-            }
+            // Sorteia 1 card principal para a animação interativa
+            currentDrawnCard = DATABASE_CARDS[Math.floor(Math.random() * DATABASE_CARDS.length)];
+            playerState.cards[currentDrawnCard.id] = (playerState.cards[currentDrawnCard.id] || 0) + 1;
 
-            drawn.forEach(card => {
-                let el = document.createElement('div');
-                el.className = 'w-28 h-40 bg-slate-800 border-2 border-amber-400 rounded-xl p-2.5 flex flex-col justify-between items-center text-center shadow-xl';
-                el.innerHTML = `
-                    <div class="text-[10px] font-bold text-amber-300">${card.rarity}</div>
-                    <div class="font-black text-xs" style="color: ${card.color}">${card.name}</div>
-                    <div class="text-[9px] text-slate-300">${card.bonus}</div>
-                `;
-                container.appendChild(el);
-            });
-
+            const revealArea = document.getElementById('gacha-reveal-area');
+            revealArea.innerHTML = `
+                <div id="mystery-envelope" onclick="revealCard()" class="w-36 h-48 bg-slate-900 border-4 border-amber-400 rounded-2xl flex flex-col items-center justify-center cursor-pointer shadow-2xl float-card transition hover:scale-105" style="box-shadow: 0 0 35px ${currentDrawnCard.glowColor};">
+                    <span class="text-5xl mb-2">✉️</span>
+                    <span class="text-[11px] font-black text-amber-300 tracking-wider">PACOTE MÁGICO</span>
+                    <span class="text-[9px] text-slate-400 mt-1">Toque para abrir</span>
+                </div>
+            `;
             updateFarmPets();
+        }
+
+        function revealCard() {
+            const revealArea = document.getElementById('gacha-reveal-area');
+            document.getElementById('gacha-instruction').innerText = "Parabéns! Novo animal descoberto!";
+            document.getElementById('gacha-close-btn').classList.remove('hidden');
+
+            revealArea.innerHTML = `
+                <div class="flex flex-col items-center float-card">
+                    <div class="w-40 h-52 bg-slate-900 border-4 border-amber-400 rounded-2xl p-4 flex flex-col justify-between items-center text-center shadow-2xl" style="box-shadow: 0 0 45px ${currentDrawnCard.glowColor};">
+                        <div class="text-[10px] font-bold text-amber-300 uppercase tracking-widest">${currentDrawnCard.rarity}</div>
+                        <div class="text-4xl my-2">🌟</div>
+                        <div>
+                            <div class="font-black text-sm" style="color: ${currentDrawnCard.color}">${currentDrawnCard.name}</div>
+                            <div class="text-[9px] text-slate-300 mt-1">${currentDrawnCard.bonus}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function closeGacha() {
