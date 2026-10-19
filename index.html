@@ -102,14 +102,12 @@
         </div>
     </div>
 
-    <!-- GACHA / ABERTURA DE PACOTES COM ENVELOPE MÁGICO -->
     <div id="menu-gacha" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex flex-col items-center justify-center p-4">
         <div class="text-center mb-4">
             <h2 class="text-xl font-black text-amber-400 mb-1">ABRINDO PACOTE DE CARDS</h2>
             <p id="gacha-instruction" class="text-xs text-slate-300 animate-pulse">Toque no envelope misterioso para abrir!</p>
         </div>
         
-        <!-- Contorno do Envelope / Revelação -->
         <div id="gacha-reveal-area" class="flex flex-wrap justify-center items-center gap-6 mb-8 min-h-[300px]"></div>
 
         <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-6 py-3 rounded-xl text-xs hidden">Continuar Jogando</button>
@@ -162,7 +160,7 @@
         let scene, camera, renderer, player, avatarGroup;
         let leftArmGroup, rightArmGroup, leftLegGroup, rightLegGroup;
         let doorMesh, gateMesh, bedPosition = new THREE.Vector3();
-        let houseColliders = [];
+        let solidColliders = []; // Lista unificada de colisões (Paredes e Cercas)
         let walkCycle = 0;
         let cameraAngle = 0, cameraDistance = 12, cameraHeight = 6;
         let isMouseDown = false, mousePrevX = 0;
@@ -235,15 +233,16 @@
             const pathCenter = new THREE.Mesh(new THREE.PlaneGeometry(10, 80), new THREE.MeshStandardMaterial({ color: 0xa1887f, roughness: 0.95 }));
             pathCenter.rotation.x = -Math.PI / 2; pathCenter.position.set(-10, 0.03, -10); scene.add(pathCenter);
 
+            // CASA MOBILIADA E COM COLISÃO NAS PAREDES
             const hX = -25, hZ = -25;
             const wallMat = new THREE.MeshStandardMaterial({ color: 0xffecb3, roughness: 0.6 });
             const roofMat = new THREE.MeshStandardMaterial({ color: 0xc62828, roughness: 0.4 });
             const woodMat = new THREE.MeshStandardMaterial({ color: 0x5d4037, roughness: 0.8 });
 
-            const w1 = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 0.6), wallMat); w1.position.set(hX, 4, hZ - 7); scene.add(w1); houseColliders.push(w1);
-            const w2 = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 0.6), wallMat); w2.position.set(hX, 4, hZ + 7); scene.add(w2); houseColliders.push(w2);
-            const w3 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8, 14), wallMat); w3.position.set(hX - 7, 4, hZ); scene.add(w3); houseColliders.push(w3);
-            const w4 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8, 14), wallMat); w4.position.set(hX + 7, 4, hZ); scene.add(w4); houseColliders.push(w4);
+            const w1 = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 0.6), wallMat); w1.position.set(hX, 4, hZ - 7); scene.add(w1); solidColliders.push({x: hX, z: hZ - 7, radius: 7});
+            const w2 = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 0.6), wallMat); w2.position.set(hX, 4, hZ + 7); scene.add(w2); solidColliders.push({x: hX, z: hZ + 7, radius: 7});
+            const w3 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8, 14), wallMat); w3.position.set(hX - 7, 4, hZ); scene.add(w3); solidColliders.push({x: hX - 7, z: hZ, radius: 7});
+            const w4 = new THREE.Mesh(new THREE.BoxGeometry(0.6, 8, 14), wallMat); w4.position.set(hX + 7, 4, hZ); scene.add(w4); solidColliders.push({x: hX + 7, z: hZ, radius: 7});
 
             const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 6, 4), roofMat);
             roof.position.set(hX, 11, hZ); roof.rotation.y = Math.PI / 4; scene.add(roof);
@@ -264,404 +263,11 @@
             const table = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 1.5), woodMat); table.position.set(hX, 0.75, hZ); scene.add(table);
             const stove = new THREE.Mesh(new THREE.BoxGeometry(2.5, 2, 2), new THREE.MeshStandardMaterial({ color: 0x37474f })); stove.position.set(hX + 4, 1, hZ + 3); scene.add(stove);
 
+            // CERCADO COM COLISÃO NAS CERCAS
             const penGround = new THREE.Mesh(new THREE.PlaneGeometry(28, 28), new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.95 }));
             penGround.rotation.x = -Math.PI / 2; penGround.position.set(-15, 0.03, 5); scene.add(penGround);
 
             const fenceMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41 });
             for(let i = -14; i <= 14; i += 7) {
                 createFencePost(-29, i + 5, fenceMat);
-                createFencePost(-1, i + 5, fenceMat);
-                if(i !== 0) createFencePost(-15 + i, -9, fenceMat);
-                createFencePost(-15 + i, 19, fenceMat);
-            }
-
-            gateMesh = new THREE.Mesh(new THREE.BoxGeometry(5, 2.2, 0.3), fenceMat);
-            gateMesh.position.set(-15, 1.1, -9); scene.add(gateMesh);
-
-            createTree(-10, -40); createTree(-40, -10); createTree(35, -35); createTree(40, 20);
-        }
-
-        function createFencePost(x, z, mat) {
-            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 3), mat);
-            post.position.set(x, 1.5, z); post.castShadow = true; scene.add(post);
-        }
-
-        function createTree(x, z) {
-            const group = new THREE.Group();
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 5), new THREE.MeshStandardMaterial({ color: 0x4e342e }));
-            trunk.position.y = 2.5; trunk.castShadow = true; group.add(trunk);
-
-            const leaves = new THREE.Mesh(new THREE.SphereGeometry(3.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.6 }));
-            leaves.position.y = 6.5; leaves.castShadow = true; group.add(leaves);
-
-            group.position.set(x, 0, z); scene.add(group);
-        }
-
-        function createPlayer() {
-            player = new THREE.Group(); player.position.set(0, 0, 0); scene.add(player);
-            avatarGroup = new THREE.Group(); player.add(avatarGroup);
-            buildAvatarMesh();
-        }
-
-        function buildAvatarMesh() {
-            while(avatarGroup.children.length > 0){ avatarGroup.remove(avatarGroup.children[0]); }
-
-            const skinMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.skin, roughness: 0.5 });
-            const shirtMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.shirt, roughness: 0.5 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: playerState.avatar.pants, roughness: 0.5 });
-
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), skinMat);
-            head.position.y = 4.2; head.scale.set(1, 1.1, 1); head.castShadow = true; avatarGroup.add(head);
-
-            const eyeGeo = new THREE.SphereGeometry(0.08, 8, 8);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
-            const leftEye = new THREE.Mesh(eyeGeo, eyeMat); leftEye.position.set(-0.22, 4.3, 0.62); avatarGroup.add(leftEye);
-            const rightEye = new THREE.Mesh(eyeGeo, eyeMat); rightEye.position.set(0.22, 4.3, 0.62); avatarGroup.add(rightEye);
-
-            if(playerState.avatar.hat === 'straw') {
-                const hatMat = new THREE.MeshStandardMaterial({ color: 0xd4a373 });
-                const brim = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.1, 16), hatMat);
-                brim.position.set(0, 4.8, 0); avatarGroup.add(brim);
-            }
-
-            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.7, 2, 12), shirtMat);
-            torso.position.y = 2.5; torso.castShadow = true; avatarGroup.add(torso);
-
-            leftArmGroup = new THREE.Group(); leftArmGroup.position.set(1, 3.2, 0);
-            const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 1.8), shirtMat);
-            leftArm.position.y = -0.8; leftArm.castShadow = true; leftArmGroup.add(leftArm);
-            avatarGroup.add(leftArmGroup);
-
-            rightArmGroup = new THREE.Group(); rightArmGroup.position.set(-1, 3.2, 0);
-            const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.22, 1.8), shirtMat);
-            rightArm.position.y = -0.8; rightArm.castShadow = true; rightArmGroup.add(rightArm);
-            avatarGroup.add(rightArmGroup);
-
-            leftLegGroup = new THREE.Group(); leftLegGroup.position.set(0.4, 1.6, 0);
-            const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 1.8), pantsMat);
-            leftLeg.position.y = -0.8; leftLeg.castShadow = true; leftLegGroup.add(leftLeg);
-            avatarGroup.add(leftLegGroup);
-
-            rightLegGroup = new THREE.Group(); rightLegGroup.position.set(-0.4, 1.6, 0);
-            const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 1.8), pantsMat);
-            rightLeg.position.y = -0.8; rightLeg.castShadow = true; rightLegGroup.add(rightLeg);
-            avatarGroup.add(rightLegGroup);
-        }
-
-        function updateAvatar() {
-            playerState.avatar.skin = document.getElementById('opt-skin').value;
-            playerState.avatar.shirt = document.getElementById('opt-shirt').value;
-            playerState.avatar.pants = document.getElementById('opt-pants').value;
-            playerState.avatar.hat = document.getElementById('opt-hat').value;
-            buildAvatarMesh();
-        }
-
-        function createPetMesh(data) {
-            const group = new THREE.Group();
-            const mainMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.6 });
-            const legMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
-
-            if(data.id === 'chicken') {
-                const body = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 12), mainMat); body.position.y = 0.9; group.add(body);
-                const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.6), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-                leg1.position.set(-0.2, 0.3, 0); group.add(leg1);
-                const leg2 = leg1.clone(); leg2.position.set(0.2, 0.3, 0); group.add(leg2);
-            } else {
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 2, 12), mainMat);
-                body.rotation.x = Math.PI / 2; body.position.y = 1.2; group.add(body);
-                
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 12, 12), mainMat);
-                head.position.set(0, 1.7, 1); group.add(head);
-
-                for(let x of [-0.5, 0.5]) {
-                    for(let z of [-0.7, 0.7]) {
-                        let leg = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.15, 1.2), legMat);
-                        leg.position.set(x, 0.6, z); leg.castShadow = true; group.add(leg);
-                    }
-                }
-            }
-            return group;
-        }
-
-        function setupControls() {
-            let touchCamStartX = 0;
-            window.addEventListener('touchstart', (e) => {
-                if(e.touches[0].clientX > window.innerWidth / 2) { touchCamStartX = e.touches[0].clientX; }
-            }, { passive: true });
-
-            window.addEventListener('touchmove', (e) => {
-                if(e.touches[0].clientX > window.innerWidth / 2) {
-                    let deltaX = e.touches[0].clientX - touchCamStartX;
-                    cameraAngle -= deltaX * 0.008;
-                    touchCamStartX = e.touches[0].clientX;
-                }
-            }, { passive: true });
-
-            window.addEventListener('mousedown', (e) => {
-                if(e.target.tagName === 'CANVAS') { isMouseDown = true; mousePrevX = e.clientX; }
-            });
-            window.addEventListener('mousemove', (e) => {
-                if(!isMouseDown) return;
-                let deltaX = e.clientX - mousePrevX; cameraAngle -= deltaX * 0.008; mousePrevX = e.clientX;
-            });
-            window.addEventListener('mouseup', () => { isMouseDown = false; });
-
-            const joyZone = document.getElementById('joystick-zone');
-            const joyKnob = document.getElementById('joystick-knob');
-
-            joyZone.addEventListener('touchstart', (e) => {
-                joyActive = true; const touch = e.touches[0]; joyStartX = touch.clientX; joyStartY = touch.clientY;
-            }, { passive: true });
-
-            window.addEventListener('touchmove', (e) => {
-                if(!joyActive) return;
-                const touch = e.touches[0];
-                joyDeltaX = touch.clientX - joyStartX; joyDeltaY = touch.clientY - joyStartY;
-                let dist = Math.hypot(joyDeltaX, joyDeltaY);
-                if(dist > 45) { joyDeltaX = (joyDeltaX / dist) * 45; joyDeltaY = (joyDeltaY / dist) * 45; }
-                joyKnob.style.transform = `translate(${joyDeltaX}px, ${joyDeltaY}px)`;
-            }, { passive: true });
-
-            window.addEventListener('touchend', () => {
-                joyActive = false; joyDeltaX = 0; joyDeltaY = 0; joyKnob.style.transform = `translate(0px, 0px)`;
-            });
-        }
-
-        function triggerJump() { if(!isJumping) { velocityY = 0.35; isJumping = true; } }
-
-        function updateFarmPets() {
-            petsInFarm.forEach(pet => scene.remove(pet.mesh));
-            petsInFarm = [];
-
-            let index = 0;
-            for(let id in playerState.cards) {
-                if(playerState.cards[id] > 0) {
-                    let cardData = DATABASE_CARDS.find(c => c.id === id);
-                    if(cardData) {
-                        let petMesh = createPetMesh(cardData);
-                        let px = -22 + (index % 3) * 6;
-                        let pz = -2 + Math.floor(index / 3) * 6;
-                        petMesh.position.set(px, 0, pz);
-                        scene.add(petMesh);
-
-                        petsInFarm.push({ mesh: petMesh, id: id, timer: Math.random() * 10 + 5 });
-                        index++;
-                    }
-                }
-            }
-            document.getElementById('stat-pets').innerText = petsInFarm.length;
-        }
-
-        function animLoop() {
-            requestAnimationFrame(animLoop);
-
-            let isMoving = false;
-
-            if(joyActive) {
-                let moveX = joyDeltaX / 45; let moveZ = joyDeltaY / 45;
-                let camForwardX = -Math.sin(cameraAngle); let camForwardZ = -Math.cos(cameraAngle);
-                let camRightX = Math.cos(cameraAngle); let camRightZ = -Math.sin(cameraAngle);
-
-                let dirX = (camForwardX * (-moveZ)) + (camRightX * moveX);
-                let dirZ = (camForwardZ * (-moveZ)) + (camRightZ * moveX);
-
-                if(Math.hypot(dirX, dirZ) > 0.1) {
-                    let nextX = player.position.x + dirX * 0.18;
-                    let nextZ = player.position.z + dirZ * 0.18;
-
-                    let blocked = false;
-                    houseColliders.forEach(c => {
-                        if(Math.hypot(nextX - c.position.x, nextZ - c.position.z) < 2) blocked = true;
-                    });
-
-                    if(!blocked) {
-                        isMoving = true;
-                        player.position.x = nextX;
-                        player.position.z = nextZ;
-                        player.rotation.y = Math.atan2(dirX, dirZ);
-                    }
-                }
-            }
-
-            if(isMoving) {
-                walkCycle += 0.2;
-                leftArmGroup.rotation.x = Math.sin(walkCycle) * 0.6;
-                rightArmGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
-                leftLegGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
-                rightLegGroup.rotation.x = Math.sin(walkCycle) * 0.6;
-            } else {
-                leftArmGroup.rotation.x *= 0.8;
-                rightArmGroup.rotation.x *= 0.8;
-                leftLegGroup.rotation.x *= 0.8;
-                rightLegGroup.rotation.x *= 0.8;
-            }
-
-            player.position.y += velocityY;
-            if(player.position.y > 0) velocityY -= 0.02;
-            else { player.position.y = 0; isJumping = false; velocityY = 0; }
-
-            let camX = player.position.x + Math.sin(cameraAngle) * cameraDistance;
-            let camZ = player.position.z + Math.cos(cameraAngle) * cameraDistance;
-            camera.position.set(camX, player.position.y + cameraHeight, camZ);
-            camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
-
-            if(player.position.distanceTo(doorMesh.position) < 4) doorMesh.position.x = -22;
-            else doorMesh.position.x = -25;
-
-            if(player.position.distanceTo(gateMesh.position) < 4) gateMesh.position.x = -12;
-            else gateMesh.position.x = -15;
-
-            if(player.position.distanceTo(bedPosition) < 3.5) {
-                showNotification("Está na hora de dormir! 🌙");
-            }
-
-            petsInFarm.forEach(pet => {
-                let dist = player.position.distanceTo(pet.mesh.position);
-                pet.timer -= 0.016;
-                if(dist < 4.5 && pet.timer <= 0) {
-                    pet.timer = Math.random() * 12 + 8;
-                    playPetSound(pet.id);
-                    pet.mesh.position.y = 0.5;
-                    setTimeout(() => pet.mesh.position.y = 0, 300);
-                }
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        function recordAudioForCard(id) {
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                let mr = new MediaRecorder(stream); let chunks = [];
-                mr.ondataavailable = e => chunks.push(e.data);
-                mr.onstop = () => {
-                    let blob = new Blob(chunks, { type: 'audio/webm' });
-                    playerState.audioRecordings[id] = URL.createObjectURL(blob);
-                    showNotification("Som gravado com sucesso!"); updateAlbumUI();
-                };
-                mr.start(); showNotification("Gravando som... Fale agora!");
-                setTimeout(() => { if(mr.state === 'recording') mr.stop(); }, 2500);
-            }).catch(() => showNotification("Permissão de microfone negada."));
-        }
-
-        function playPetSound(id) {
-            if(playerState.audioRecordings[id]) {
-                const sound = new Audio(playerState.audioRecordings[id]);
-                sound.volume = 0.7; sound.play().catch(e => {});
-            }
-        }
-
-        function openMenu(name) {
-            closeMenus();
-            if(name === 'custom') document.getElementById('menu-custom').classList.remove('hidden');
-            if(name === 'album') { updateAlbumUI(); document.getElementById('menu-album').classList.remove('hidden'); }
-            if(name === 'missions') document.getElementById('menu-missions').classList.remove('hidden');
-        }
-
-        function closeMenus() {
-            document.getElementById('menu-custom').classList.add('hidden');
-            document.getElementById('menu-album').classList.add('hidden');
-            document.getElementById('menu-missions').classList.add('hidden');
-        }
-
-        function updateAlbumUI() {
-            const grid = document.getElementById('album-grid'); grid.innerHTML = '';
-            let uniqueCount = 0, totalCount = 0;
-
-            DATABASE_CARDS.forEach(card => {
-                let count = playerState.cards[card.id] || 0;
-                if(count > 0) uniqueCount++;
-                totalCount += count;
-                let hasAudio = playerState.audioRecordings[card.id];
-
-                let cardEl = document.createElement('div');
-                cardEl.className = `p-3 rounded-xl border flex justify-between items-center bg-slate-900/80 ${count > 0 ? 'border-amber-500/50' : 'border-slate-800 opacity-50'}`;
-                cardEl.innerHTML = `
-                    <div>
-                        <div class="font-bold text-xs" style="color: ${card.color}">${card.name}</div>
-                        <div class="text-[10px] text-slate-400">Raridade: ${card.rarity} | Qtd: x${count}</div>
-                        <div class="text-[9px] text-emerald-400 mt-0.5">${card.bonus}</div>
-                    </div>
-                    <div class="flex gap-1.5">
-                        ${hasAudio ? `<button onclick="playPetSound('${card.id}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">▶️ Ouvir</button>` : ''}
-                        <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 hover:bg-purple-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">🎤 ${hasAudio ? 'Regravar' : 'Gravar'}</button>
-                    </div>
-                `;
-                grid.appendChild(cardEl);
-            });
-
-            document.getElementById('stat-unique').innerText = `${uniqueCount}/${DATABASE_CARDS.length}`;
-            document.getElementById('stat-total').innerText = totalCount;
-            document.getElementById('pack-count-lbl').innerText = playerState.packs;
-            document.getElementById('hud-packs').innerText = playerState.packs;
-        }
-
-        // SISTEMA DE GACHA COM ENVELOPE MÁGICO ILUMINADO E REVELAÇÃO DO ANIMAL
-        let currentDrawnCard = null;
-
-        function openGacha() {
-            if(playerState.packs <= 0) { showNotification("Sem pacotes! Complete missões."); return; }
-            playerState.packs--; closeMenus();
-            
-            document.getElementById('menu-gacha').classList.remove('hidden');
-            document.getElementById('gacha-close-btn').classList.add('hidden');
-            document.getElementById('gacha-instruction').innerText = "Toque no envelope misterioso para abrir!";
-
-            // Sorteia 1 card principal para a animação interativa
-            currentDrawnCard = DATABASE_CARDS[Math.floor(Math.random() * DATABASE_CARDS.length)];
-            playerState.cards[currentDrawnCard.id] = (playerState.cards[currentDrawnCard.id] || 0) + 1;
-
-            const revealArea = document.getElementById('gacha-reveal-area');
-            revealArea.innerHTML = `
-                <div id="mystery-envelope" onclick="revealCard()" class="w-36 h-48 bg-slate-900 border-4 border-amber-400 rounded-2xl flex flex-col items-center justify-center cursor-pointer shadow-2xl float-card transition hover:scale-105" style="box-shadow: 0 0 35px ${currentDrawnCard.glowColor};">
-                    <span class="text-5xl mb-2">✉️</span>
-                    <span class="text-[11px] font-black text-amber-300 tracking-wider">PACOTE MÁGICO</span>
-                    <span class="text-[9px] text-slate-400 mt-1">Toque para abrir</span>
-                </div>
-            `;
-            updateFarmPets();
-        }
-
-        function revealCard() {
-            const revealArea = document.getElementById('gacha-reveal-area');
-            document.getElementById('gacha-instruction').innerText = "Parabéns! Novo animal descoberto!";
-            document.getElementById('gacha-close-btn').classList.remove('hidden');
-
-            revealArea.innerHTML = `
-                <div class="flex flex-col items-center float-card">
-                    <div class="w-40 h-52 bg-slate-900 border-4 border-amber-400 rounded-2xl p-4 flex flex-col justify-between items-center text-center shadow-2xl" style="box-shadow: 0 0 45px ${currentDrawnCard.glowColor};">
-                        <div class="text-[10px] font-bold text-amber-300 uppercase tracking-widest">${currentDrawnCard.rarity}</div>
-                        <div class="text-4xl my-2">🌟</div>
-                        <div>
-                            <div class="font-black text-sm" style="color: ${currentDrawnCard.color}">${currentDrawnCard.name}</div>
-                            <div class="text-[9px] text-slate-300 mt-1">${currentDrawnCard.bonus}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function closeGacha() {
-            document.getElementById('menu-gacha').classList.add('hidden'); openMenu('album');
-        }
-
-        function startMission(id) {
-            closeMenus(); playerState.packs += 2; playerState.coins += 50;
-            showNotification("Missão Concluída! Ganhou +2 Pacotes e +50 Moedas!"); updateAlbumUI();
-        }
-
-        function showNotification(msg) {
-            const box = document.getElementById('notification-box');
-            box.innerText = msg; box.style.opacity = '1';
-            setTimeout(() => box.style.opacity = '0', 3000);
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        window.onload = init;
-    </script>
-</body>
-</html>
+                createFencePost(-1, i + 
