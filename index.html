@@ -8,9 +8,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; user-select: none; -webkit-user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #111; color: #fff; touch-action: none; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; box-sizing: border-box; z-index: 10; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 12px; box-sizing: border-box; z-index: 10; }
         .interactive { pointer-events: auto; }
-        .game-panel { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .game-panel { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -18,44 +18,44 @@
     <!-- UI LAYER -->
     <div id="ui-layer">
         <!-- TOP HUD -->
-        <div class="flex justify-between items-center w-full">
-            <div class="flex gap-3">
-                <div class="game-panel px-4 py-2 flex items-center gap-2">
-                    <span class="text-2xl">🪙</span>
+        <div class="flex justify-between items-center w-full gap-2">
+            <div class="flex gap-2">
+                <div class="game-panel px-3 py-1.5 flex items-center gap-1.5">
+                    <span class="text-xl">🪙</span>
                     <div>
-                        <div class="text-xs text-slate-400 font-bold">MOEDAS</div>
-                        <div id="hud-coins" class="text-lg font-black text-amber-400">150</div>
+                        <div class="text-[9px] text-slate-400 font-bold">MOEDAS</div>
+                        <div id="hud-coins" class="text-sm font-black text-amber-400">150</div>
                     </div>
                 </div>
-                <div class="game-panel px-4 py-2 flex items-center gap-2">
-                    <span class="text-2xl">📦</span>
+                <div class="game-panel px-3 py-1.5 flex items-center gap-1.5">
+                    <span class="text-xl">📦</span>
                     <div>
-                        <div class="text-xs text-slate-400 font-bold">PACOTES</div>
-                        <div id="hud-packs" class="text-lg font-black text-blue-400">3</div>
+                        <div class="text-[9px] text-slate-400 font-bold">PACOTES</div>
+                        <div id="hud-packs" class="text-sm font-black text-blue-400">3</div>
                     </div>
                 </div>
             </div>
             
-            <div class="flex gap-2 interactive">
-                <button onclick="openMenu('custom')" class="bg-emerald-600 hover:bg-emerald-500 font-bold px-4 py-2 rounded-xl shadow-lg border border-emerald-400 flex items-center gap-2 transition active:scale-95 text-xs sm:text-base">👤 Personagem</button>
-                <button onclick="openMenu('album')" class="bg-purple-600 hover:bg-purple-500 font-bold px-4 py-2 rounded-xl shadow-lg border border-purple-400 flex items-center gap-2 transition active:scale-95 text-xs sm:text-base">📖 Cards</button>
-                <button onclick="openMenu('missions')" class="bg-amber-600 hover:bg-amber-500 font-bold px-4 py-2 rounded-xl shadow-lg border border-amber-400 flex items-center gap-2 transition active:scale-95 text-xs sm:text-base">⭐ Missões</button>
+            <div class="flex gap-1.5 interactive">
+                <button onclick="openMenu('custom')" class="bg-emerald-600 hover:bg-emerald-500 font-bold px-2.5 py-2 rounded-xl shadow-lg border border-emerald-400 flex items-center gap-1 text-[11px]">👤 Avatar</button>
+                <button onclick="openMenu('album')" class="bg-purple-600 hover:bg-purple-500 font-bold px-2.5 py-2 rounded-xl shadow-lg border border-purple-400 flex items-center gap-1 text-[11px]">📖 Cards</button>
+                <button onclick="openMenu('missions')" class="bg-amber-600 hover:bg-amber-500 font-bold px-2.5 py-2 rounded-xl shadow-lg border border-amber-400 flex items-center gap-1 text-[11px]">⭐ Missões</button>
             </div>
         </div>
 
         <!-- CENTER NOTIFICATIONS -->
-        <div id="notification-box" class="self-center bg-black/70 border border-amber-500/50 text-amber-300 px-6 py-2 rounded-full text-sm font-semibold opacity-0 transition-opacity duration-300 pointer-events-none">
+        <div id="notification-box" class="self-center bg-black/80 border border-amber-500/50 text-amber-300 px-5 py-2 rounded-full text-xs font-semibold opacity-0 transition-opacity duration-300 pointer-events-none text-center">
             Aviso do Jogo
         </div>
 
         <!-- MOBILE CONTROLS & JOYSTICK -->
-        <div class="flex justify-between items-end w-full pb-4">
-            <div id="joystick-zone" class="relative w-32 h-32 bg-white/10 rounded-full border border-white/20 interactive flex items-center justify-center">
-                <div id="joystick-knob" class="absolute w-12 h-12 bg-white/50 rounded-full shadow-md pointer-events-none"></div>
+        <div class="flex justify-between items-end w-full pb-2">
+            <div id="joystick-zone" class="relative w-28 h-28 bg-white/10 rounded-full border border-white/20 interactive flex items-center justify-center">
+                <div id="joystick-knob" class="absolute w-10 h-10 bg-white/50 rounded-full shadow-md pointer-events-none"></div>
             </div>
             <div class="flex gap-3 interactive">
-                <button id="btn-action" onclick="triggerAction()" class="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500 hover:bg-emerald-400 border-4 border-emerald-300 rounded-full flex items-center justify-center text-2xl shadow-xl active:scale-95 transition">🖐️</button>
-                <button id="btn-jump" onclick="triggerJump()" class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500 hover:bg-blue-400 border-4 border-blue-300 rounded-full flex items-center justify-center text-2xl shadow-xl active:scale-95 transition">⬆️</button>
+                <button id="btn-action" onclick="triggerAction()" class="w-16 h-16 bg-emerald-500 hover:bg-emerald-400 border-4 border-emerald-300 rounded-full flex items-center justify-center text-xl shadow-xl active:scale-95 transition">🖐️</button>
+                <button id="btn-jump" onclick="triggerJump()" class="w-16 h-16 bg-blue-500 hover:bg-blue-400 border-4 border-blue-300 rounded-full flex items-center justify-center text-xl shadow-xl active:scale-95 transition">⬆️</button>
             </div>
         </div>
     </div>
@@ -63,86 +63,80 @@
     <!-- MENUS & MODALS -->
     <!-- Customization Menu -->
     <div id="menu-custom" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="game-panel w-full max-w-md p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h2 class="text-xl font-bold text-emerald-400">Customizar Personagem</h2>
-                <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-xl">✕</button>
+        <div class="game-panel w-full max-w-sm p-5 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h2 class="text-base font-bold text-emerald-400">Customizar Personagem</h2>
+                <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-lg">✕</button>
             </div>
-            <div class="flex flex-col gap-3 text-sm">
-                <label>Cor da Pele: <input type="color" id="opt-skin" value="#fcd34d" onchange="updateAvatar()" class="w-full h-10 rounded cursor-pointer"></label>
-                <label>Cor da Camisa: <input type="color" id="opt-shirt" value="#3b82f6" onchange="updateAvatar()" class="w-full h-10 rounded cursor-pointer"></label>
-                <label>Cor da Calça: <input type="color" id="opt-pants" value="#1e293b" onchange="updateAvatar()" class="w-full h-10 rounded cursor-pointer"></label>
+            <div class="flex flex-col gap-2.5 text-xs">
+                <label>Cor da Pele: <input type="color" id="opt-skin" value="#fcd34d" onchange="updateAvatar()" class="w-full h-8 rounded cursor-pointer"></label>
+                <label>Cor da Camisa: <input type="color" id="opt-shirt" value="#3b82f6" onchange="updateAvatar()" class="w-full h-8 rounded cursor-pointer"></label>
+                <label>Cor da Calça: <input type="color" id="opt-pants" value="#1e293b" onchange="updateAvatar()" class="w-full h-8 rounded cursor-pointer"></label>
                 <label>Acessório de Cabeça: 
-                    <select id="opt-hat" onchange="updateAvatar()" class="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-lg">
+                    <select id="opt-hat" onchange="updateAvatar()" class="w-full mt-1 p-2 bg-slate-800 border border-slate-700 rounded-lg text-xs">
                         <option value="none">Nenhum</option>
                         <option value="cap">Boné</option>
                         <option value="straw">Chapéu de Palha</option>
                     </select>
                 </label>
             </div>
-            <button onclick="closeMenus()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 font-bold py-3 rounded-xl">Salvar e Jogar</button>
+            <button onclick="closeMenus()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 font-bold py-2.5 rounded-xl text-xs">Salvar e Jogar</button>
         </div>
     </div>
 
     <!-- Album Menu -->
     <div id="menu-album" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="game-panel w-full max-w-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h2 class="text-xl font-bold text-purple-400">Álbum & Coleção de Cards</h2>
-                <div class="flex gap-3">
-                    <button onclick="openGacha()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-3 py-1.5 rounded-lg text-xs animate-bounce">📦 Abrir Pacotes (<span id="pack-count-lbl">3</span>)</button>
-                    <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-xl">✕</button>
+        <div class="game-panel w-full max-w-lg p-5 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h2 class="text-base font-bold text-purple-400">Álbum & Gravação de Voz</h2>
+                <div class="flex gap-2">
+                    <button onclick="openGacha()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold px-2.5 py-1 rounded-lg text-[10px] animate-bounce">📦 Pacotes (<span id="pack-count-lbl">3</span>)</button>
+                    <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-lg">✕</button>
                 </div>
             </div>
-            <div id="album-stats" class="text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800 flex justify-around">
+            <div id="album-stats" class="text-[11px] text-slate-300 bg-slate-900/60 p-2.5 rounded-xl border border-slate-800 flex justify-around">
                 <div>Cards Únicos: <span id="stat-unique" class="font-bold text-amber-400">0/7</span></div>
                 <div>Total Obtidos: <span id="stat-total" class="font-bold text-blue-400">0</span></div>
                 <div>No Sítio: <span id="stat-pets" class="font-bold text-emerald-400">0</span></div>
             </div>
-            <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto max-h-[50vh] pr-2"></div>
+            <div id="album-grid" class="flex flex-col gap-2 overflow-y-auto max-h-[50vh] pr-1"></div>
         </div>
     </div>
 
     <!-- Gacha / Pack Opening Modal -->
     <div id="menu-gacha" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex flex-col items-center justify-center p-4">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-black text-amber-400 mb-1">ABRINDO PACOTE DE CARDS</h2>
+        <div class="text-center mb-4">
+            <h2 class="text-xl font-black text-amber-400 mb-1">ABRINDO PACOTE DE CARDS</h2>
             <p class="text-xs text-slate-400">Novos animais descobertos!</p>
         </div>
-        <div id="gacha-card-container" class="flex flex-wrap justify-center gap-4 mb-8"></div>
-        <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-6 py-3 rounded-xl">Continuar Jogando</button>
+        <div id="gacha-card-container" class="flex flex-wrap justify-center gap-3 mb-6"></div>
+        <button id="gacha-close-btn" onclick="closeGacha()" class="bg-blue-600 hover:bg-blue-500 font-bold px-5 py-2.5 rounded-xl text-xs">Continuar Jogando</button>
     </div>
 
     <!-- Missions Menu -->
     <div id="menu-missions" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="game-panel w-full max-w-md p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h2 class="text-xl font-bold text-amber-400">Missões do Sítio</h2>
-                <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-xl">✕</button>
+        <div class="game-panel w-full max-w-sm p-5 flex flex-col gap-3">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                <h2 class="text-base font-bold text-amber-400">Missões do Sítio</h2>
+                <button onclick="closeMenus()" class="text-slate-400 hover:text-white text-lg">✕</button>
             </div>
-            <div class="flex flex-col gap-3">
-                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div class="flex flex-col gap-2.5">
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
                     <div>
-                        <div class="font-bold text-sm text-emerald-400">1. Pomar Apple Run</div>
-                        <div class="text-xs text-slate-400">Colete maçãs no menor tempo possível.</div>
+                        <div class="font-bold text-xs text-emerald-400">1. Pomar Apple Run</div>
+                        <div class="text-[10px] text-slate-400">Colete maçãs rapidamente.</div>
                     </div>
-                    <button onclick="startMission(1)" class="bg-emerald-600 hover:bg-emerald-500 font-bold px-3 py-2 rounded-lg text-xs">Jogar</button>
+                    <button onclick="startMission(1)" class="bg-emerald-600 font-bold px-2.5 py-1.5 rounded-lg text-[10px]">Jogar</button>
                 </div>
-                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
+                <div class="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center">
                     <div>
-                        <div class="font-bold text-sm text-blue-400">2. Celeiro Obby Parkour</div>
-                        <div class="text-xs text-slate-400">Suba pelas caixas e fardos de feno.</div>
+                        <div class="font-bold text-xs text-blue-400">2. Celeiro Obby Parkour</div>
+                        <div class="text-[10px] text-slate-400">Suba pelas caixas e fardos.</div>
                     </div>
-                    <button onclick="startMission(2)" class="bg-blue-600 hover:bg-blue-500 font-bold px-3 py-2 rounded-lg text-xs">Jogar</button>
+                    <button onclick="startMission(2)" class="bg-blue-600 font-bold px-2.5 py-1.5 rounded-lg text-[10px]">Jogar</button>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Mission Active Overlay -->
-    <div id="mission-hud" class="fixed top-20 left-1/2 -translate-x-1/2 bg-black/70 border border-amber-400 px-6 py-2 rounded-2xl hidden text-center z-40">
-        <div id="mission-title" class="text-xs font-bold text-amber-400">MISSÃO ATIVA</div>
-        <div id="mission-timer" class="text-xl font-black">00:00</div>
     </div>
 
     <script>
@@ -212,7 +206,6 @@
             animLoop();
         }
 
-        // --- MAPA DO SÍTIO ---
         function createFarmMap() {
             const groundGeo = new THREE.PlaneGeometry(300, 300);
             const groundMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.9 });
@@ -295,7 +288,6 @@
             scene.add(group);
         }
 
-        // --- PERSONAGEM COM ANIMAÇÃO DE ARTICULAÇÃO ---
         function createPlayer() {
             player = new THREE.Group();
             player.position.set(0, 0, 0);
@@ -344,7 +336,6 @@
             torso.position.y = 2.5; torso.castShadow = true;
             avatarGroup.add(torso);
 
-            // Braço Esquerdo (Grupo de Pívoa)
             leftArmGroup = new THREE.Group();
             leftArmGroup.position.set(1.1, 3.2, 0);
             const leftArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.8, 0.6), shirtMat);
@@ -352,7 +343,6 @@
             leftArmGroup.add(leftArmMesh);
             avatarGroup.add(leftArmGroup);
 
-            // Braço Direito
             rightArmGroup = new THREE.Group();
             rightArmGroup.position.set(-1.1, 3.2, 0);
             const rightArmMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.8, 0.6), shirtMat);
@@ -360,7 +350,6 @@
             rightArmGroup.add(rightArmMesh);
             avatarGroup.add(rightArmGroup);
 
-            // Perna Esquerda
             leftLegGroup = new THREE.Group();
             leftLegGroup.position.set(0.45, 1.7, 0);
             const leftLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.8, 0.6), pantsMat);
@@ -368,7 +357,6 @@
             leftLegGroup.add(leftLegMesh);
             avatarGroup.add(leftLegGroup);
 
-            // Perna Direita
             rightLegGroup = new THREE.Group();
             rightLegGroup.position.set(-0.45, 1.7, 0);
             const rightLegMesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.8, 0.6), pantsMat);
@@ -385,7 +373,7 @@
             buildAvatarMesh();
         }
 
-        // --- MODELAGEM RICA DOS ANIMAIS 3D ---
+        // ANIMAIS COM OLHOS INCLUÍDOS
         function createPetMesh(data) {
             const group = new THREE.Group();
             const mainMat = new THREE.MeshStandardMaterial({ color: data.color, roughness: 0.7 });
@@ -394,84 +382,74 @@
             const pinkMat = new THREE.MeshStandardMaterial({ color: 0xf472b6 });
             const yellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15 });
 
+            // Olhos Padrão para os Animais
+            const eyeGeo = new THREE.BoxGeometry(0.15, 0.15, 0.05);
+
             if(data.id === 'chicken') {
-                // Corpo Galinha
                 const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1.2), mainMat);
                 body.position.y = 0.8; body.castShadow = true; group.add(body);
-                // Bico
                 const beak = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.4), yellowMat);
                 beak.position.set(0, 0.9, 0.7); group.add(beak);
-                // Crista
                 const comb = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.5), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
                 comb.position.set(0, 1.4, 0.1); group.add(comb);
+                
+                const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.35, 1, 0.5); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.35, 1, 0.5); group.add(eye2);
             } 
             else if(data.id === 'pig') {
-                // Porco
                 const body = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 2), pinkMat);
                 body.position.y = 0.8; body.castShadow = true; group.add(body);
-                // Focinho
                 const snout = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.4, 0.3), new THREE.MeshStandardMaterial({ color: 0xf43f5e }));
                 snout.position.set(0, 0.8, 1.1); group.add(snout);
-                // Orelhas
-                const ear1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.1), pinkMat);
-                ear1.position.set(-0.5, 1.4, 0.6); group.add(ear1);
-                const ear2 = ear1.clone(); ear2.position.set(0.5, 1.4, 0.6); group.add(ear2);
+
+                const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.4, 1.1, 1.01); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.4, 1.1, 1.01); group.add(eye2);
             }
             else if(data.id === 'sheep') {
-                // Ovelha com Lã
                 const wool = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.3, 2.2), whiteMat);
                 wool.position.y = 1; wool.castShadow = true; group.add(wool);
-                // Cabeça
                 const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.9), pinkMat);
                 head.position.set(0, 1.1, 1.2); group.add(head);
+
+                const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.3, 1.2, 1.61); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.3, 1.2, 1.61); group.add(eye2);
             }
             else if(data.id === 'cow') {
-                // Vaca Malhada
                 const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.4, 2.6), whiteMat);
                 body.position.y = 1.1; body.castShadow = true; group.add(body);
-                // Manchas Pretas
-                const spot = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), blackMat);
-                spot.position.set(0.5, 1.2, 0.2); group.add(spot);
-                // Cabeça e Chifres
                 const head = new THREE.Mesh(new THREE.BoxGeometry(1, 0.9, 1), whiteMat);
                 head.position.set(0, 1.5, 1.4); group.add(head);
-                const horn1 = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.4, 0.2), yellowMat);
-                horn1.position.set(-0.5, 2.1, 1.4); group.add(horn1);
-                const horn2 = horn1.clone(); horn2.position.set(0.5, 2.1, 1.4); group.add(horn2);
+
+                const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.35, 1.6, 1.81); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.35, 1.6, 1.81); group.add(eye2);
             }
             else if(data.id === 'horse') {
-                // Cavalo
                 const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 2.8), mainMat);
                 body.position.y = 1.4; body.castShadow = true; group.add(body);
-                // Pescoço e Cabeça
-                const neck = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.6, 0.9), mainMat);
-                neck.position.set(0, 2.2, 1.1); neck.rotation.x = -0.3; group.add(neck);
                 const head = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 1.3), mainMat);
                 head.position.set(0, 2.9, 1.5); group.add(head);
+
+                const eye1 = new THREE.Mesh(eyeGeo, blackMat); eye1.position.set(-0.3, 3, 1.9); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, blackMat); eye2.position.set(0.3, 3, 1.9); group.add(eye2);
             }
             else if(data.id === 'bull') {
-                // Touro Robustão
                 const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.7, 3), new THREE.MeshStandardMaterial({ color: 0x78350f }));
                 body.position.y = 1.3; body.castShadow = true; group.add(body);
-                // Chifres Grandes
-                const horn1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.3), yellowMat);
-                horn1.position.set(-1.1, 2.1, 1.4); group.add(horn1);
-                const horn2 = horn1.clone(); horn2.position.set(1.1, 2.1, 1.4); group.add(horn2);
+
+                const eye1 = new THREE.Mesh(eyeGeo, yellowMat); eye1.position.set(-0.5, 1.7, 1.5); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, yellowMat); eye2.position.set(0.5, 1.7, 1.5); group.add(eye2);
             }
             else if(data.id === 'dragon') {
-                // Dragão Dourado
                 const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.5, 3), new THREE.MeshStandardMaterial({ color: 0xd97706 }));
                 body.position.y = 1.3; body.castShadow = true; group.add(body);
-                // Asas
-                const wing1 = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 1.5), yellowMat);
-                wing1.position.set(1.8, 2, 0); wing1.rotation.z = 0.3; group.add(wing1);
-                const wing2 = wing1.clone(); wing2.position.set(-1.8, 2, 0); wing2.rotation.z = -0.3; group.add(wing2);
+
+                const eye1 = new THREE.Mesh(eyeGeo, new THREE.MeshBasicMaterial({ color: 0xef4444 })); eye1.position.set(-0.4, 1.7, 1.5); group.add(eye1);
+                const eye2 = new THREE.Mesh(eyeGeo, new THREE.MeshBasicMaterial({ color: 0xef4444 })); eye2.position.set(0.4, 1.7, 1.5); group.add(eye2);
             }
 
             return group;
         }
 
-        // --- CONTROLES & MOVIMENTAÇÃO ---
         function setupControls() {
             let touchCamStartX = 0;
             window.addEventListener('touchstart', (e) => {
@@ -535,7 +513,23 @@
             if(!isJumping) { velocityY = 0.35; isJumping = true; }
         }
 
-        function triggerAction() { showNotification("Ação executada!"); }
+        // Interação com a Mão (Toca som do animal mais próximo no cercado)
+        function triggerAction() {
+            let interacted = false;
+            petsInFarm.forEach(pet => {
+                let dist = player.position.distanceTo(pet.mesh.position);
+                if(dist < 7) {
+                    playPetSound(pet.id);
+                    pet.mesh.position.y = 0.8;
+                    setTimeout(() => pet.mesh.position.y = 0, 350);
+                    showNotification(`Interagiste com o bichinho! 🐾`);
+                    interacted = true;
+                }
+            });
+            if(!interacted) {
+                showNotification("Aproxime-se dos animais no cercado para interagir!");
+            }
+        }
 
         function updateFarmPets() {
             petsInFarm.forEach(pet => scene.remove(pet.mesh));
@@ -585,7 +579,6 @@
                 }
             }
 
-            // Animação de Passos (Pernas e Braços)
             if(isMoving) {
                 walkCycle += 0.2;
                 leftArmGroup.rotation.x = Math.sin(walkCycle) * 0.6;
@@ -593,7 +586,6 @@
                 leftLegGroup.rotation.x = -Math.sin(walkCycle) * 0.6;
                 rightLegGroup.rotation.x = Math.sin(walkCycle) * 0.6;
             } else {
-                // Suaviza para posição em pé
                 leftArmGroup.rotation.x *= 0.8;
                 rightArmGroup.rotation.x *= 0.8;
                 leftLegGroup.rotation.x *= 0.8;
@@ -622,7 +614,6 @@
             renderer.render(scene, camera);
         }
 
-        // --- SISTEMA DE GRAVAÇÃO DE VOZ ---
         function recordAudioForCard(id) {
             navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
                 let mr = new MediaRecorder(stream);
@@ -635,16 +626,18 @@
                     updateAlbumUI();
                 };
                 mr.start();
-                showNotification("Gravando som do bichinho... (Fale agora!)");
+                showNotification("Gravando som... Fale agora!");
                 setTimeout(() => { if(mr.state === 'recording') mr.stop(); }, 2500);
-            }).catch(() => showNotification("Erro ao aceder ao microfone."));
+            }).catch(() => showNotification("Permissão de microfone negada."));
         }
 
         function playPetSound(id) {
             if(playerState.audioRecordings[id]) {
                 const sound = new Audio(playerState.audioRecordings[id]);
-                sound.volume = 0.6;
+                sound.volume = 0.7;
                 sound.play().catch(e => {});
+            } else {
+                showNotification("Este bichinho ainda não tem som gravado!");
             }
         }
 
@@ -673,16 +666,16 @@
                 let hasAudio = playerState.audioRecordings[card.id];
 
                 let cardEl = document.createElement('div');
-                cardEl.className = `p-4 rounded-xl border flex justify-between items-center bg-slate-900/80 ${count > 0 ? 'border-amber-500/50' : 'border-slate-800 opacity-50'}`;
+                cardEl.className = `p-3 rounded-xl border flex justify-between items-center bg-slate-900/80 ${count > 0 ? 'border-amber-500/50' : 'border-slate-800 opacity-50'}`;
                 cardEl.innerHTML = `
                     <div>
-                        <div class="font-bold text-sm" style="color: ${card.color}">${card.name}</div>
-                        <div class="text-xs text-slate-400">Raridade: ${card.rarity} | Qtd: x${count}</div>
-                        <div class="text-[10px] text-emerald-400 mt-1">${card.bonus}</div>
+                        <div class="font-bold text-xs" style="color: ${card.color}">${card.name}</div>
+                        <div class="text-[10px] text-slate-400">Raridade: ${card.rarity} | Qtd: x${count}</div>
+                        <div class="text-[9px] text-emerald-400 mt-0.5">${card.bonus}</div>
                     </div>
-                    <div class="flex gap-2">
-                        ${hasAudio ? `<button onclick="playPetSound('${card.id}')" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-xs font-bold">▶️ Ouvir</button>` : ''}
-                        <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs font-bold">🎤 ${hasAudio ? 'Regravar' : 'Gravar'}</button>
+                    <div class="flex gap-1.5">
+                        ${hasAudio ? `<button onclick="playPetSound('${card.id}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">▶️ Ouvir</button>` : ''}
+                        <button onclick="recordAudioForCard('${card.id}')" class="bg-purple-600 hover:bg-purple-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold">🎤 ${hasAudio ? 'Regravar' : 'Gravar'}</button>
                     </div>
                 `;
                 grid.appendChild(cardEl);
@@ -712,11 +705,11 @@
 
             drawn.forEach(card => {
                 let el = document.createElement('div');
-                el.className = 'w-32 h-44 bg-slate-800 border-2 border-amber-400 rounded-xl p-3 flex flex-col justify-between items-center text-center shadow-xl';
+                el.className = 'w-28 h-40 bg-slate-800 border-2 border-amber-400 rounded-xl p-2.5 flex flex-col justify-between items-center text-center shadow-xl';
                 el.innerHTML = `
-                    <div class="text-xs font-bold text-amber-300">${card.rarity}</div>
-                    <div class="font-black text-sm" style="color: ${card.color}">${card.name}</div>
-                    <div class="text-[10px] text-slate-300">${card.bonus}</div>
+                    <div class="text-[10px] font-bold text-amber-300">${card.rarity}</div>
+                    <div class="font-black text-xs" style="color: ${card.color}">${card.name}</div>
+                    <div class="text-[9px] text-slate-300">${card.bonus}</div>
                 `;
                 container.appendChild(el);
             });
